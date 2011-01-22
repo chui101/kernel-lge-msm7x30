@@ -232,7 +232,7 @@ struct msm_isp_stats_event_ctrl {
 	unsigned short resptype;
 	union {
 		struct msm_isp_evt_msg isp_msg;
-		struct msm_isp_ctrl_cmd ctrl;
+		struct msm_ctrl_cmd ctrl;
 	} isp_data;
 };
 
