@@ -49,6 +49,7 @@ spinlock_t pp_thumb_spinlock;
 				__func__, __LINE__, ((to) ? "to" : "from"))
 #define ERR_COPY_FROM_USER() ERR_USER_COPY(0)
 #define ERR_COPY_TO_USER() ERR_USER_COPY(1)
+#define MAX_PMEM_CFG_BUFFERS 10
 
 static struct class *msm_class;
 static dev_t msm_devno;
@@ -376,6 +377,15 @@ static uint8_t msm_pmem_region_lookup(struct hlist_head *ptype,
 		}
 	}
 	spin_unlock_irqrestore(pmem_spinlock, flags);
+	/* After lookup failure, dump all the list entries...*/
+	if (rc == 0) {
+		pr_err("%s: pmem_type = %d\n", __func__, pmem_type);
+		hlist_for_each_entry_safe(region, node, n, ptype, list) {
+			pr_err("listed region->info.type = %d, active = %d",
+				region->info.type, region->info.active);
+		}
+
+	}
 	return rc;
 }
 
@@ -705,6 +715,7 @@ static int __msm_get_frame(struct msm_sync *sync,
 	frame->cbcr_off = pmem_info.cbcr_off;
 	frame->fd = pmem_info.fd;
 	frame->path = vdata->phy.output_id;
+	frame->frame_id = vdata->phy.frame_id;
 	CDBG("%s: y %x, cbcr %x, qcmd %x, virt_addr %x\n",
 		__func__,
 		pphy->y_phy, pphy->cbcr_phy, (int) qcmd, (int) frame->buffer);
@@ -1104,6 +1115,7 @@ static int msm_get_stats(struct msm_sync *sync, void __user *arg)
 		se.stats_event.type   = data->evt_msg.type;
 		se.stats_event.msg_id = data->evt_msg.msg_id;
 		se.stats_event.len    = data->evt_msg.len;
+		se.stats_event.frame_id = data->evt_msg.frame_id;
 
 		CDBG("%s: qcmd->type %d length %d msd_id %d\n", __func__,
 			qcmd->type,
@@ -1482,7 +1494,7 @@ static int msm_frame_axi_cfg(struct msm_sync *sync,
 	int rc = -EIO;
 	struct axidata axi_data;
 	void *data = &axi_data;
-	struct msm_pmem_region region[8];
+	struct msm_pmem_region region[MAX_PMEM_CFG_BUFFERS];
 	int pmem_type;
 
 	memset(&axi_data, 0, sizeof(axi_data));
@@ -1493,7 +1505,8 @@ static int msm_frame_axi_cfg(struct msm_sync *sync,
 		pmem_type = MSM_PMEM_PREVIEW;
 		axi_data.bufnum2 =
 			msm_pmem_region_lookup(&sync->pmem_frames, pmem_type,
-				&region[0], 8, &sync->pmem_frame_spinlock);
+				&region[0], MAX_PMEM_CFG_BUFFERS,
+				&sync->pmem_frame_spinlock);
 		if (!axi_data.bufnum2) {
 			pr_err("%s %d: pmem region lookup error (empty %d)\n",
 				__func__, __LINE__,
@@ -1506,7 +1519,8 @@ static int msm_frame_axi_cfg(struct msm_sync *sync,
 		pmem_type = MSM_PMEM_PREVIEW;
 		axi_data.bufnum1 =
 			msm_pmem_region_lookup(&sync->pmem_frames, pmem_type,
-				&region[0], 8, &sync->pmem_frame_spinlock);
+				&region[0], MAX_PMEM_CFG_BUFFERS,
+				&sync->pmem_frame_spinlock);
 		if (!axi_data.bufnum1) {
 			pr_err("%s %d: pmem region lookup error\n",
 				__func__, __LINE__);
@@ -1517,7 +1531,7 @@ static int msm_frame_axi_cfg(struct msm_sync *sync,
 		axi_data.bufnum2 =
 			msm_pmem_region_lookup(&sync->pmem_frames, pmem_type,
 				&region[axi_data.bufnum1],
-				(8-(axi_data.bufnum1)),
+				(MAX_PMEM_CFG_BUFFERS-(axi_data.bufnum1)),
 				&sync->pmem_frame_spinlock);
 		if (!axi_data.bufnum2) {
 			pr_err("%s %d: pmem region lookup error\n",
@@ -1526,12 +1540,14 @@ static int msm_frame_axi_cfg(struct msm_sync *sync,
 		}
 		break;
 
-
 	case CMD_AXI_CFG_SNAP:
+		CDBG("%s, CMD_AXI_CFG_SNAP, type=%d\n", __func__,
+			cfgcmd->cmd_type);
 		pmem_type = MSM_PMEM_THUMBNAIL;
 		axi_data.bufnum1 =
 			msm_pmem_region_lookup(&sync->pmem_frames, pmem_type,
-				&region[0], 8, &sync->pmem_frame_spinlock);
+				&region[0], MAX_PMEM_CFG_BUFFERS,
+				&sync->pmem_frame_spinlock);
 		if (!axi_data.bufnum1) {
 			pr_err("%s %d: pmem region lookup error\n",
 				__func__, __LINE__);
@@ -1542,9 +1558,48 @@ static int msm_frame_axi_cfg(struct msm_sync *sync,
 		axi_data.bufnum2 =
 			msm_pmem_region_lookup(&sync->pmem_frames, pmem_type,
 				&region[axi_data.bufnum1],
-				(8-(axi_data.bufnum1)),
+				(MAX_PMEM_CFG_BUFFERS-(axi_data.bufnum1)),
 				 &sync->pmem_frame_spinlock);
 		if (!axi_data.bufnum2) {
+			pr_err("%s %d: pmem region lookup error\n",
+				__func__, __LINE__);
+			return -EINVAL;
+		}
+		break;
+
+	case CMD_AXI_CFG_ZSL:
+		CDBG("%s, CMD_AXI_CFG_ZSL, type = %d\n", __func__,
+			cfgcmd->cmd_type);
+		pmem_type = MSM_PMEM_PREVIEW;
+		axi_data.bufnum1 =
+			msm_pmem_region_lookup(&sync->pmem_frames, pmem_type,
+				&region[0], MAX_PMEM_CFG_BUFFERS,
+				&sync->pmem_frame_spinlock);
+		if (!axi_data.bufnum1) {
+			pr_err("%s %d: pmem region lookup error\n",
+				__func__, __LINE__);
+			return -EINVAL;
+		}
+
+		pmem_type = MSM_PMEM_THUMBNAIL;
+		axi_data.bufnum2 =
+			msm_pmem_region_lookup(&sync->pmem_frames, pmem_type,
+				&region[axi_data.bufnum1],
+				(MAX_PMEM_CFG_BUFFERS-(axi_data.bufnum1)),
+				 &sync->pmem_frame_spinlock);
+		if (!axi_data.bufnum2) {
+			pr_err("%s %d: pmem region lookup error\n",
+				__func__, __LINE__);
+			return -EINVAL;
+		}
+
+		pmem_type = MSM_PMEM_MAINIMG;
+		axi_data.bufnum3 =
+			msm_pmem_region_lookup(&sync->pmem_frames, pmem_type,
+				&region[axi_data.bufnum1 + axi_data.bufnum2],
+				(MAX_PMEM_CFG_BUFFERS - axi_data.bufnum1 -
+				axi_data.bufnum2), &sync->pmem_frame_spinlock);
+		if (!axi_data.bufnum3) {
 			pr_err("%s %d: pmem region lookup error\n",
 				__func__, __LINE__);
 			return -EINVAL;
@@ -1555,7 +1610,8 @@ static int msm_frame_axi_cfg(struct msm_sync *sync,
 		pmem_type = MSM_PMEM_RAW_MAINIMG;
 		axi_data.bufnum2 =
 			msm_pmem_region_lookup(&sync->pmem_frames, pmem_type,
-				&region[0], 8, &sync->pmem_frame_spinlock);
+				&region[0], MAX_PMEM_CFG_BUFFERS,
+				&sync->pmem_frame_spinlock);
 		if (!axi_data.bufnum2) {
 			pr_err("%s %d: pmem region lookup error\n",
 				__func__, __LINE__);
@@ -1910,6 +1966,8 @@ static int msm_axi_config(struct msm_sync *sync, void __user *arg)
 	case CMD_AXI_CFG_PREVIEW:
 	case CMD_AXI_CFG_SNAP:
 	case CMD_RAW_PICT_AXI_CFG:
+	case CMD_AXI_CFG_ZSL:
+		CDBG("%s, cfgcmd.cmd_type = %d\n", __func__, cfgcmd.cmd_type);
 		return msm_frame_axi_cfg(sync, &cfgcmd);
 	case CMD_AXI_CFG_VPE:
 		return msm_vpe_frame_cfg(sync, (void *)&cfgcmd);
@@ -1954,11 +2012,8 @@ static int __msm_get_pic(struct msm_sync *sync,
 			1); /* mark pic frame in use */
 
 	if (rc < 0) {
-		pr_err("%s: cannot get pic frame, invalid lookup address "
-			"y %x cbcr %x\n",
-			__func__,
-			pphy->y_phy,
-			pphy->cbcr_phy);
+		pr_err("%s: cannot get pic frame, invalid lookup address y %x"
+			" cbcr %x\n", __func__, pphy->y_phy, pphy->cbcr_phy);
 		goto err;
 	}
 
@@ -2014,7 +2069,7 @@ static int msm_get_pic(struct msm_sync *sync, void __user *arg)
 			return -EFAULT;
 		}
 	}
-	pr_info("%s: copy snapshot frame to user\n", __func__);
+	CDBG("%s: copy snapshot frame to user\n", __func__);
 	if (copy_to_user((void *)arg,
 				&frame, sizeof(struct msm_frame))) {
 		ERR_COPY_TO_USER();
@@ -2430,6 +2485,7 @@ static long msm_ioctl_frame(struct file *filep, unsigned int cmd,
 	return rc;
 }
 
+static int msm_unblock_poll_pic(struct msm_sync *sync);
 static long msm_ioctl_pic(struct file *filep, unsigned int cmd,
 	unsigned long arg)
 {
@@ -2446,7 +2502,7 @@ static long msm_ioctl_pic(struct file *filep, unsigned int cmd,
 		rc = msm_put_pic_buffer(pmsm->sync, argp);
 		break;
 	case MSM_CAM_IOCTL_UNBLOCK_POLL_PIC_FRAME:
-		rc = msm_unblock_poll_frame(pmsm->sync);
+		rc = msm_unblock_poll_pic(pmsm->sync);
 		break;
 	default:
 		break;
@@ -2618,6 +2674,17 @@ static int msm_release_pic(struct inode *node, struct file *filep)
 		atomic_set(&pmsm->opened, 0);
 	}
 	return rc;
+}
+
+static int msm_unblock_poll_pic(struct msm_sync *sync)
+{
+	unsigned long flags;
+	CDBG("%s\n", __func__);
+	spin_lock_irqsave(&sync->pict_q.lock, flags);
+	sync->unblock_poll_pic_frame = 1;
+	wake_up(&sync->pict_q.wait);
+	spin_unlock_irqrestore(&sync->pict_q.lock, flags);
+	return 0;
 }
 
 static int msm_unblock_poll_frame(struct msm_sync *sync)
