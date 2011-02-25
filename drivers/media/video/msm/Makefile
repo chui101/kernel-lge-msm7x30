@@ -30,6 +30,7 @@ ifeq ($(CONFIG_MSM_CAMERA_V4L2),y)
 else
   obj-$(CONFIG_VX6953) += vx6953.o vx6953_reg.o
 endif
+obj-$(CONFIG_QS_S5K4E1) += qs_s5k4e1.o qs_s5k4e1_reg.o
 obj-$(CONFIG_VB6801) += vb6801.o
 obj-$(CONFIG_IMX074) += imx074.o imx074_reg.o
 obj-$(CONFIG_MT9P017) += mt9p017.o mt9p017_reg.o

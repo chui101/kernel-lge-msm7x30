@@ -1833,6 +1833,35 @@ static struct platform_device msm_camera_sensor_webcam = {
 	},
 };
 #endif
+#ifdef CONFIG_QS_S5K4E1
+
+static char eeprom_data[864];
+static struct msm_camera_sensor_flash_data flash_qs_s5k4e1 = {
+	.flash_type		= MSM_CAMERA_FLASH_LED,
+	.flash_src		= &msm_flash_src
+};
+
+static struct msm_camera_sensor_info msm_camera_sensor_qs_s5k4e1_data = {
+	.sensor_name	= "qs_s5k4e1",
+	.sensor_reset	= 106,
+	.sensor_pwd		= 85,
+	.vcm_pwd		= 1,
+	.vcm_enable		= 0,
+	.pdata			= &msm_camera_device_data,
+	.resource		= msm_camera_resources,
+	.num_resources	= ARRAY_SIZE(msm_camera_resources),
+	.flash_data		= &flash_qs_s5k4e1,
+	.strobe_flash_data	= &strobe_flash_xenon,
+	.csi_if			= 1,
+	.eeprom_data	= eeprom_data,
+};
+struct platform_device msm_camera_sensor_qs_s5k4e1 = {
+	.name	= "msm_camera_qs_s5k4e1",
+	.dev	= {
+		.platform_data = &msm_camera_sensor_qs_s5k4e1_data,
+	},
+};
+#endif
 static struct i2c_board_info msm_camera_boardinfo[] __initdata = {
 	#ifdef CONFIG_IMX074
 	{
@@ -1842,6 +1871,16 @@ static struct i2c_board_info msm_camera_boardinfo[] __initdata = {
 	#ifdef CONFIG_WEBCAM_OV7692
 	{
 		I2C_BOARD_INFO("ov7692", 0x78),
+	},
+	#endif
+	#ifdef CONFIG_WEBCAM_OV9726
+	{
+		I2C_BOARD_INFO("ov9726", 0x10),
+	},
+	#endif
+	#ifdef CONFIG_QS_S5K4E1
+	{
+		I2C_BOARD_INFO("qs_s5k4e1", 0x20),
 	},
 	#endif
 };
@@ -3278,6 +3317,9 @@ static struct platform_device *rumi_sim_devices[] __initdata = {
 #ifdef CONFIG_WEBCAM_OV7692
 	&msm_camera_sensor_webcam,
 #endif
+#ifdef CONFIG_QS_S5K4E1
+	&msm_camera_sensor_qs_s5k4e1,
+#endif
 #endif
 #ifdef CONFIG_MSM_GEMINI
 	&msm_gemini_device,
@@ -3602,6 +3644,9 @@ static struct platform_device *surf_devices[] __initdata = {
 #endif
 #ifdef CONFIG_WEBCAM_OV7692
 	&msm_camera_sensor_webcam,
+#endif
+#ifdef CONFIG_QS_S5K4E1
+	&msm_camera_sensor_qs_s5k4e1,
 #endif
 #endif
 #ifdef CONFIG_MSM_GEMINI
