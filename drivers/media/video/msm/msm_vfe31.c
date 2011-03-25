@@ -1635,7 +1635,8 @@ static int vfe31_proc_general(struct msm_vfe31_cmd *cmd)
 		cmdp = kmalloc(cmd->length, GFP_ATOMIC);
 		/* Incrementing with 4 so as to point to the 2nd Register as
 		the 2nd register has the mce_enable bit */
-		old_val = msm_io_r(vfe31_ctrl->vfebase + V31_CHROMA_SUP_OFF + 4);
+		old_val = msm_io_r(vfe31_ctrl->vfebase +
+						V31_CHROMA_SUP_OFF + 4);
 		if (!cmdp) {
 			rc = -ENOMEM;
 			goto proc_general_done;
@@ -1654,7 +1655,8 @@ static int vfe31_proc_general(struct msm_vfe31_cmd *cmd)
 					&new_val, 4);
 		cmdp_local += 1;
 
-		old_val = msm_io_r(vfe31_ctrl->vfebase + V31_CHROMA_SUP_OFF + 8);
+		old_val = msm_io_r(vfe31_ctrl->vfebase +
+						V31_CHROMA_SUP_OFF + 8);
 		new_val = *cmdp_local;
 		old_val &= MCE_Q_K_MASK;
 		new_val = new_val | old_val;
