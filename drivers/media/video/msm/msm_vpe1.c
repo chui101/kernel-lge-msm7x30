@@ -123,8 +123,11 @@ void vpe_reset_state_variables(void)
 
 static void vpe_config_axi_default(void)
 {
+<<<<<<< HEAD
 	msm_io_w(0x25, vpe_device->vpebase + VPE_AXI_ARB_2_OFFSET);
 
+=======
+>>>>>>> e3251b0... msm: camera: VPE on demand support
 	CDBG("%s: yaddr %ld cbcraddr %ld", __func__,
 		 vpe_ctrl->out_y_addr, vpe_ctrl->out_cbcr_addr);
 
