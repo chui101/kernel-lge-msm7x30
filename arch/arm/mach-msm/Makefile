@@ -1,6 +1,6 @@
 obj-y += io.o dma.o memory.o
 obj-y += clock.o clock-voter.o
-obj-y += modem_notifier.o
+obj-y += modem_notifier.o subsystem_map.o
 obj-$(CONFIG_CPU_FREQ_MSM) += cpufreq.o
 obj-$(CONFIG_DEBUG_FS) += nohlt.o clock-debug.o
 
@@ -173,7 +173,7 @@ ifdef CONFIG_MSM_BUS_SCALING
 obj-$(CONFIG_DEBUG_FS) += msm_bus_dbg.o
 endif
 
-obj-$(CONFIG_SMMU)		+= iommu.o iommu_dev.o
+obj-$(CONFIG_SMMU)		+= iommu.o iommu_dev.o iommu_domains.o
 obj-$(CONFIG_SMMU_8X60)		+= devices-msm8x60-iommu.o
 
 ifdef CONFIG_VCM
