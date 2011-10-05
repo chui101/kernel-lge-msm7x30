@@ -2410,11 +2410,20 @@ int mdp4_overlay_play(struct fb_info *info, struct msmfb_overlay_data *req,
 				(pipe->src_height / 2));
 			pipe->srcp2_addr = addr;
 		} else {
-			addr += (pipe->src_width * pipe->src_height);
-			pipe->srcp1_addr = addr;
-			addr += ((pipe->src_width / 2) *
-				(pipe->src_height / 2));
-			pipe->srcp2_addr = addr;
+			if (pipe->src_format == MDP_Y_CR_CB_GH2V2) {
+				addr += (ALIGN(pipe->src_width, 16) *
+					pipe->src_height);
+				pipe->srcp1_addr = addr;
+				addr += ((ALIGN((pipe->src_width / 2), 16)) *
+					(pipe->src_height / 2));
+				pipe->srcp2_addr = addr;
+			} else {
+				addr += (pipe->src_width * pipe->src_height);
+				pipe->srcp1_addr = addr;
+				addr += ((pipe->src_width / 2) *
+					(pipe->src_height / 2));
+				pipe->srcp2_addr = addr;
+			}
 		}
 		/* mdp planar format expects Cb in srcp1 and Cr in p2 */
 		if ((pipe->src_format == MDP_Y_CR_CB_H2V2) ||
