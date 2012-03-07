@@ -580,7 +580,7 @@ int tcm9000md_sensor_config(void __user *argp)
         CAM_MSG("%s:CFG_SET_FPS : user fps[%d]\n",__func__, cfg_data.cfg.fps.fps_div);
         rc = tcm9000md_set_preview_fps(cfg_data.cfg.fps.fps_div);
         break;
-
+/*
     case CFG_SET_SCENE:   // donghyun.kwon(20110502) ; add scene mode for VGA
         CAM_MSG("tcm9000md_sensor_config: command is CFG_SET_SCENE\n");
         rc = tcm9000md_set_scenemode(cfg_data.cfg.effect);
@@ -589,7 +589,7 @@ int tcm9000md_sensor_config(void __user *argp)
     case CFG_SET_EXPOSURE_VALUE:   // donghyun.kwon(20110505) : add exposure compensation for VGA
         CAM_MSG("tcm9000md_sensor_config: command is CFG_SET_EXPOSURE_VALUE\n");
         rc = tcm9000md_set_exposure_compensation(cfg_data.cfg.effect);
-        break;
+        break;*/
 
     default:	 	
         CAM_MSG("tcm9000md_sensor_config:cfg_data.cfgtype[%d]\n",cfg_data.cfgtype);
