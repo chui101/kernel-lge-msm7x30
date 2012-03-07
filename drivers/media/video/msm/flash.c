@@ -364,6 +364,8 @@ int32_t msm_camera_flash_set_led_state(
 {
 	int32_t rc;
 
+                return -ENODEV;
+
 	CDBG("flash_set_led_state: %d flash_sr_type=%d\n", led_state,
 	    fdata->flash_src->flash_sr_type);
 

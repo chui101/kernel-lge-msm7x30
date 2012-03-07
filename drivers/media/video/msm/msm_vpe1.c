@@ -1,4 +1,4 @@
-/* Copyright (c) 2010, Code Aurora Forum. All rights reserved.
+/* Copyright (c) 2010-2011, Code Aurora Forum. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -9,11 +9,6 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301, USA.
- *
  */
 
 #include <linux/uaccess.h>
@@ -22,7 +17,6 @@
 #include <linux/io.h>
 #include <linux/slab.h>
 #include "msm_vpe1.h"
-#include <mach/msm_reqs.h>
 #include <linux/pm_qos_params.h>
 #include <linux/clk.h>
 #include <mach/clk.h>
@@ -1324,7 +1318,7 @@ int vpe_enable(uint32_t clk_rate)
 		return rc;
 	}
 
-	CDBG("%s: enable_irq \n", __func__);
+	CDBG("%s: enable_irq\n", __func__);
 	vpe_enable_irq();
 
 	/* initialize the data structure - lock, queue etc. */
