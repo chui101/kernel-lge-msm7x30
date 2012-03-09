@@ -323,9 +323,9 @@ static void bluesleep_tx_timer_expire(unsigned long data)
 		mod_timer(&tx_timer, jiffies + (TX_TIMER_INTERVAL*HZ));
 #if defined(CONFIG_LGE_BRCM_H4_LPM_SUPPORT_PATCH)
 		/* clear the incoming data flag only when there is no enqueued data on transport and can be asleep */
-		if(msm_hs_tx_empty(bsi->uport)){
+		//if(msm_hs_tx_empty(bsi->uport)){
 			clear_bit(BT_TXDATA, &flags);
-		}
+	//	}
 #endif
 	}
 

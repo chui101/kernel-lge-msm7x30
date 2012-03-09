@@ -37,6 +37,8 @@ enum {
 	BT_RESET_N		= 122,
 };
 
+static int bt_status = 0;
+
 #ifdef CONFIG_BT
 static unsigned bt_config_power_on[] = {
 	GPIO_CFG(BT_WAKE, 0, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA),	/* WAKE */
@@ -80,6 +82,9 @@ static int victor_bluetooth_power(int on)
 {
 	int pin, rc;
 
+	if (on == bt_status)
+		return 0;
+
 	printk(KERN_DEBUG "b-b-b.c %s\n", __func__);
 
 	if (on) {
@@ -114,6 +119,7 @@ static int victor_bluetooth_power(int on)
 			}
 		}
 	}
+	bt_status = on;
 	return 0;
 }
 
