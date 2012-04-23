@@ -227,12 +227,22 @@ struct vdec_ioctl_msg {
 #define VDEC_IOCTL_SET_CONT_ON_RECONFIG  \
 	_IO(VDEC_IOCTL_MAGIC, 34)
 
+#define VDEC_IOCTL_SET_DISABLE_DMX \
+	_IOW(VDEC_IOCTL_MAGIC, 35, struct vdec_ioctl_msg)
+
+#define VDEC_IOCTL_GET_DISABLE_DMX \
+	_IOR(VDEC_IOCTL_MAGIC, 36, struct vdec_ioctl_msg)
+
+#define VDEC_IOCTL_GET_DISABLE_DMX_SUPPORT \
+	_IOR(VDEC_IOCTL_MAGIC, 37, struct vdec_ioctl_msg)
+
 enum vdec_picture {
 	PICTURE_TYPE_I,
 	PICTURE_TYPE_P,
 	PICTURE_TYPE_B,
 	PICTURE_TYPE_BI,
 	PICTURE_TYPE_SKIP,
+	PICTURE_TYPE_IDR,
 	PICTURE_TYPE_UNKNOWN
 };
 
@@ -522,6 +532,8 @@ struct vdec_input_frameinfo {
 	void *client_data;
 	int pmem_fd;
 	size_t pmem_offset;
+	void __user *desc_addr;
+	uint32_t desc_size;
 };
 
 struct vdec_framesize {
