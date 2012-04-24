@@ -22,7 +22,7 @@
  * other than the GPL, without Broadcom's express prior written consent.
  *
  * $Id: wl_iw.h,v 1.15.80.6 2010/12/23 01:13:23 Exp $
- */
+ */  
 
 #ifndef _wl_iw_h_
 #define _wl_iw_h_
@@ -148,7 +148,6 @@ typedef struct wl_iw_ss_cache {
 } wl_iw_ss_cache_t;
 #endif /* CONFIG_LGE_BCM432X_PATCH */
 
-
 typedef struct wl_iw_ss_cache_ctrl {
 	wl_iw_ss_cache_t *m_cache_head;	/* specific scan cache head */
 	int m_link_down;		/* link down indicator flag */
@@ -177,6 +176,12 @@ struct ap_profile {
 	uint32	channel; /* 0 for auto */
 	uint32	preamble;
 	uint32	max_scb;	/* maxmium number of station */
+
+// LGE_UPDATE_S bluetooth.kang@lge.com	 [SSID HIDDEN] 2010.5.10
+	uint32  closednet;  
+	char country_code[WLC_CNTRY_BUF_SZ];
+// LGE_UPDATE_E
+	
 };
 
 

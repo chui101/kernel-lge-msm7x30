@@ -482,7 +482,9 @@ dhd_prot_dstats(dhd_pub_t *dhd)
 
 int dhd_set_suspend(int value, dhd_pub_t *dhd)
 {
-	int power_mode = PM_MAX;
+	//bill.jung@lge.com - Don't use legacy power save mode
+	//int power_mode = PM_MAX;
+	int power_mode = PM_FAST;	
 	wl_pkt_filter_enable_t	enable_parm;
 	char iovbuf[32];
 	int bcn_li_dtim = 3;
@@ -496,9 +498,12 @@ int dhd_set_suspend(int value, dhd_pub_t *dhd)
 			/* Enable packet filter, only allow unicast packet to send up */
 			enable_parm.id = htod32(100);
 			enable_parm.enable = htod32(1);
+			//bill.jung@lge.com - Don't use filter
+			/*
 			bcm_mkiovar("pkt_filter_enable", (char *)&enable_parm,
 				sizeof(wl_pkt_filter_enable_t), iovbuf, sizeof(iovbuf));
 			dhd_wl_ioctl_cmd(dhd, WLC_SET_VAR, iovbuf, sizeof(iovbuf), TRUE, 0);
+			*/
 			/* set bcn_li_dtim */
 			bcm_mkiovar("bcn_li_dtim", (char *)&bcn_li_dtim,
 				4, iovbuf, sizeof(iovbuf));
@@ -510,9 +515,12 @@ int dhd_set_suspend(int value, dhd_pub_t *dhd)
 			/* disable pkt filter */
 			enable_parm.id = htod32(100);
 			enable_parm.enable = htod32(0);
+			//bill.jung@lge.com - Don't use filter
+			/*
 			bcm_mkiovar("pkt_filter_enable", (char *)&enable_parm,
 				sizeof(wl_pkt_filter_enable_t), iovbuf, sizeof(iovbuf));
 			dhd_wl_ioctl_cmd(dhd, WLC_SET_VAR, iovbuf, sizeof(iovbuf), TRUE, 0);
+			*/
 			/* set bcn_li_dtim */
 			bcn_li_dtim = 0;
 			bcm_mkiovar("bcn_li_dtim", (char *)&bcn_li_dtim,
@@ -644,7 +652,29 @@ static int dhd_preinit_proc(dhd_pub_t *dhd, int ifidx, char *name, char *value)
 {
 	int var_int;
 
+	// For specific country style. ex) AU/2
+	wl_country_t cspec = {{0}, -1, {0}};
+	char *revstr;
+	char *endptr = NULL;
+	int iolen;		 
+	char smbuf[WLC_IOCTL_SMLEN*2];
+
 	if (!strcmp(name, "country")) {
+	// For specific country style. ex) AU/2
+#if defined(CONFIG_LGE_BCM432X_PATCH)
+		revstr = strchr(value, '/');
+		if (revstr) {
+			cspec.rev = strtoul(revstr + 1, &endptr, 10);
+			memcpy(cspec.country_abbrev,value,WLC_CNTRY_BUF_SZ);
+			cspec.country_abbrev[2] = '\0';
+			memcpy(cspec.ccode,cspec.country_abbrev,WLC_CNTRY_BUF_SZ);
+			memset(smbuf, 0, sizeof(smbuf));
+			printf("config country code is country : %s, rev : %d !!\n", cspec.country_abbrev,cspec.rev);
+			iolen = bcm_mkiovar("country", (char*)&cspec, sizeof(cspec), smbuf, sizeof(smbuf));
+
+			return dhdcdc_set_ioctl(dhd, ifidx, WLC_SET_VAR, smbuf, iolen, TRUE);
+		}
+#endif
 		return dhdcdc_set_ioctl(dhd, ifidx, WLC_SET_COUNTRY,
 				value, WLC_CNTRY_BUF_SZ, TRUE);
 	} else if (!strcmp(name, "roam_scan_period")) {
@@ -804,7 +834,7 @@ int
 dhd_preinit_ioctls(dhd_pub_t *dhd)
 {
 	int ret = 0;
-	char eventmask[WL_EVENTING_MASK_LEN] = {0,};
+	char eventmask[WL_EVENTING_MASK_LEN];
 	char iovbuf[WL_EVENTING_MASK_LEN + 12];	/*  Room for "event_msgs" + '\0' + bitvec  */
 
 	uint up = 0;
@@ -825,8 +855,11 @@ dhd_preinit_ioctls(dhd_pub_t *dhd)
 	uint32 dongle_align = DHD_SDALIGN;
 	uint32 glom = 0;
 	int arpoe = 1;
+#ifdef WLBTAMP
+	int arp_ol = 0xc;
+#else
 	int arp_ol = 0xf;
-	//int arp_ol = 0xc;	// WLBTAMP 20110405 yhcha
+#endif /* WLBTAMP */
 #ifndef BCMCCX								/* LGE_CHANGE_S, 2011-0226, add CCX */	//by sjpark 11-03-15
 	int scan_assoc_time = 40;
 	int scan_unassoc_time = 80;
@@ -929,15 +962,6 @@ dhd_preinit_ioctls(dhd_pub_t *dhd)
 #ifdef WLMEDIA_HTSF
 	setbit(eventmask, WLC_E_HTSFSYNC);
 #endif
-
-#if defined(CONFIG_LGE_BCM432X_PATCH) //for to be ignored events
-    if( isset( eventmask, WLC_E_RADIO ) )
-    {
-        DHD_ERROR(("%s: eventmask WLC_E_RADIO was set\n", __FUNCTION__)); 
-        clrbit( eventmask, WLC_E_RADIO );
-    }
-    clrbit( eventmask, WLC_E_TXFAIL );
-#endif //CONFIG_LGE_BCM432X_PATCH
 
 #if defined(BCMCCX) && defined(BCMDBG_EVENT) /* junlim */								/* LGE_CHANGE_S, 2011-0226, add CCX */		//by sjpark 11-03-15
 	setbit(eventmask, WLC_E_ADDTS_IND);

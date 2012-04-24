@@ -2,7 +2,7 @@
  * Broadcom Dongle Host Driver (DHD), common DHD core.
  *
  * Copyright (C) 1999-2011, Broadcom Corporation
- * 
+ *   
  *         Unless you and Broadcom execute a separate written software license
  * agreement governing use of this software, this software is licensed to you
  * under the terms of the GNU General Public License version 2 (the "GPL"),
@@ -1696,6 +1696,66 @@ fail:
 }
 
 #endif 
+
+
+#define LISTEN_INTERVAL			10
+
+/* Function to estimate possible DTIM_SKIP value */
+int
+dhd_get_dtim_skip(dhd_pub_t *dhd)
+{
+	int bcn_li_dtim;
+	int ret;
+	uint8 bssid[6];
+	int dtim_assoc = 0;
+
+	if ((dhd->dtim_skip == 0) || (dhd->dtim_skip == 1))
+		bcn_li_dtim = 3;
+	else
+		bcn_li_dtim = dhd->dtim_skip;
+
+	/* Check if associated */
+	if ((ret = dhd_wl_ioctl_cmd(dhd, WLC_GET_BSSID,
+		(char *)&bssid, ETHER_ADDR_LEN, FALSE, 0)) == BCME_NOTASSOCIATED) {
+		DHD_TRACE(("%s NOT assoc ret %d\n", __FUNCTION__, ret));
+		goto exit;
+	}
+
+	/* if assoc grab ap's dtim value */
+	if ((ret = dhd_wl_ioctl_cmd(dhd, WLC_GET_DTIMPRD,
+		&dtim_assoc, sizeof(dtim_assoc), FALSE, 0)) < 0) {
+		DHD_ERROR(("%s failed code %d\n", __FUNCTION__, ret));
+		goto exit;
+	}
+
+	DHD_ERROR(("%s bcn_li_dtim=%d DTIM=%d Listen=%d\n",
+		__FUNCTION__, bcn_li_dtim, dtim_assoc, LISTEN_INTERVAL));
+
+	/* if not assocated just eixt */
+	if (dtim_assoc == 0) {
+		goto exit;
+	}
+
+	/* check if sta listen interval fits into AP dtim */
+	if (dtim_assoc > LISTEN_INTERVAL) {
+		/* AP DTIM to big for our Listen Interval : no dtim skiping */
+		bcn_li_dtim = 1;
+		DHD_ERROR(("%s DTIM=%d > Listen=%d : too big ...\n",
+			__FUNCTION__, dtim_assoc, LISTEN_INTERVAL));
+		goto exit;
+	}
+
+	if ((bcn_li_dtim * dtim_assoc) > LISTEN_INTERVAL) {
+		/* Round up dtim_skip to fit into STAs Listen Interval */
+		bcn_li_dtim = (int)(LISTEN_INTERVAL / dtim_assoc);
+		DHD_TRACE(("%s agjust dtim_skip as %d\n", __FUNCTION__, bcn_li_dtim));
+	}
+
+exit:
+	return bcn_li_dtim;
+}
+
+
 
 #ifdef PNO_SUPPORT
 int dhd_pno_clean(dhd_pub_t *dhd)

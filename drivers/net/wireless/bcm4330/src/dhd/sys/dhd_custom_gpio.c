@@ -136,12 +136,14 @@ dhd_customer_gpio_wlan_ctrl(int onoff)
 /* LGE_CHANGE_S [yoohoo@lge.com] 2009-05-14, support start/stop */
 #if defined(CONFIG_LGE_BCM432X_PATCH)
             if (gpio_get_value(CONFIG_BCM4330_GPIO_WL_RESET)) {
+				WL_ERROR(("Real Control.!!!\n"));				
                 disable_irq(gpio_to_irq(CONFIG_BCM4330_GPIO_WL_RESET));
+				//bill.jung@lge.com
+                mdelay(150);				
                 gpio_set_value(CONFIG_BCM4330_GPIO_WL_RESET, 0);
             }
 #endif /* CONFIG_LGE_BCM432X_PATCH */
 /* LGE_CHANGE_E [yoohoo@lge.com] 2009-05-14, support start/stop */
-
 		break;
 
 		case WLAN_RESET_ON:
@@ -158,9 +160,12 @@ dhd_customer_gpio_wlan_ctrl(int onoff)
 /* LGE_CHANGE_S [yoohoo@lge.com] 2009-05-14, support start/stop */
 #if defined(CONFIG_LGE_BCM432X_PATCH)
             if (!gpio_get_value(CONFIG_BCM4330_GPIO_WL_RESET)) {
+				WL_ERROR(("Real Control.!!!\n"));								
                 gpio_set_value(CONFIG_BCM4330_GPIO_WL_RESET, 1);
 
                 mdelay(150);
+				//bill.jung@lge.com
+                mdelay(150);				
 
                 enable_irq(gpio_to_irq(CONFIG_BCM4330_GPIO_WL_RESET));
             }

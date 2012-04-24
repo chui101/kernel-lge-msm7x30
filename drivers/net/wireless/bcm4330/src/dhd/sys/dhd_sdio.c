@@ -131,9 +131,9 @@
  * for HT availability, it could take a couple hundred ms more, so
  * max out at a half second (500000us).
  */
-#if (PMU_MAX_TRANSITION_DLY <= 500000)
+#if (PMU_MAX_TRANSITION_DLY <= 1000000)		// bluetooth.kang increase wait time from 500ms to 1sec
 #undef PMU_MAX_TRANSITION_DLY
-#define PMU_MAX_TRANSITION_DLY 500000
+#define PMU_MAX_TRANSITION_DLY 1000000
 #endif
 
 /* Value for ChipClockCSR during initial setup */
@@ -149,7 +149,10 @@
 #define PKTFREE2()		if ((bus->bus != SPI_BUS) || bus->usebufpool) \
 					PKTFREE(bus->dhd->osh, pkt, FALSE);
 DHD_SPINWAIT_SLEEP_INIT(sdioh_spinwait_sleep);
-
+/* add hw_oob */
+#if defined(OOB_INTR_ONLY)
+extern void bcmsdh_set_irq(int flag);
+#endif /* defined(OOB_INTR_ONLY) */
 
 #ifdef DHD_DEBUG
 /* Device console log buffer state */
@@ -4404,11 +4407,12 @@ dhdsdio_dpc(dhd_bus_t *bus)
 	bus->intstatus = intstatus;
 
 clkwait:
-
+/* comment hw_oob */
+#if 0
 #if defined(OOB_INTR_ONLY)
 	bcmsdh_oob_intr_set(1);
 #endif /* (OOB_INTR_ONLY) */
-
+#endif
 	/* Re-enable interrupts to detect new device events (mailbox, rx frame)
 	 * or clock availability.  (Allows tx loop to check ipend if desired.)
 	 * (Unless register access seems hosed, as we may not be able to ACK...)
@@ -4417,6 +4421,10 @@ clkwait:
 		DHD_INTR(("%s: enable SDIO interrupts, rxdone %d framecnt %d\n",
 		          __FUNCTION__, rxdone, framecnt));
 		bus->intdis = FALSE;
+/* add hw_oob */
+#if defined(OOB_INTR_ONLY)
+	bcmsdh_oob_intr_set(1);
+#endif /* (OOB_INTR_ONLY) */
 		bcmsdh_intr_enable(sdh);
 	}
 
@@ -5051,11 +5059,7 @@ dhdsdio_probe(uint16 venid, uint16 devid, uint16 bus_no, uint16 slot,
 	sd1idle = TRUE;
 	dhd_readahead = TRUE;
 	retrydata = FALSE;
-#if 1 // For WMM on GB 20110425 
-	dhd_doflow = FALSE;
-#else
 	dhd_doflow = TRUE;
-#endif		
 	dhd_dongle_memsize = 0;
 	dhd_txminmax = DHD_TXMINMAX;
 
@@ -5581,12 +5585,12 @@ dhdsdio_release_malloc(dhd_bus_t *bus, osl_t *osh)
 		MFREE(osh, bus->vars, bus->varsz);
 		bus->vars = NULL;
 	}
-
+	
 #ifdef DHD_DEBUG
-		if (bus->console.buf)
-		{
-			 MFREE(osh,bus->console.buf,bus->console.bufsize);
-		}
+	if (bus->console.buf)
+	{
+		MFREE(osh,bus->console.buf,bus->console.bufsize);
+	}
 #endif
 
 }
@@ -6020,6 +6024,11 @@ dhd_bus_devreset(dhd_pub_t *dhdp, uint8 flag)
 			/* Stop the bus, disable F2 */
 			dhd_os_sdlock(dhdp);
 			dhd_bus_stop(bus, FALSE);
+/* add hw_oob */
+#if defined(OOB_INTR_ONLY)
+			/* Clean up any pending IRQ */
+			bcmsdh_set_irq(FALSE);
+#endif /* defined(OOB_INTR_ONLY) */
 
 			/* Clean tx/rx buffer pointers, detach from the dongle */
 			dhdsdio_release_dongle(bus, bus->dhd->osh, TRUE);
@@ -6053,9 +6062,12 @@ dhd_bus_devreset(dhd_pub_t *dhdp, uint8 flag)
 					dhdsdio_download_firmware(bus, bus->dhd->osh, bus->sdh)) {
 
 					/* Re-init bus, enable F2 transfer */
-					dhd_bus_init((dhd_pub_t *) bus->dhd, FALSE);
-
+/* modify hw_oob S */
+					bcmerror = dhd_bus_init((dhd_pub_t *) bus->dhd, FALSE);
+					if (bcmerror == BCME_OK) {
+/* modify hw_oob E */
 #if defined(OOB_INTR_ONLY)
+						bcmsdh_set_irq(TRUE);  /* add hw_oob */
 					dhd_enable_oob_intr(bus, TRUE);
 #endif /* defined(OOB_INTR_ONLY) */
 
@@ -6068,6 +6080,12 @@ dhd_bus_devreset(dhd_pub_t *dhdp, uint8 flag)
 #endif 
 
 					DHD_TRACE(("%s: WLAN ON DONE\n", __FUNCTION__));
+/* add hw_oob S*/
+					} else {
+						dhd_bus_stop(bus, FALSE);
+						dhdsdio_release_dongle(bus, bus->dhd->osh, TRUE);
+					}
+/* add hw_oob E*/
 				} else
 					bcmerror = BCME_SDIO_ERROR;
 			} else

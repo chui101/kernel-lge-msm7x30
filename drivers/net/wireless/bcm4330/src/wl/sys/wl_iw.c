@@ -56,8 +56,6 @@ typedef const struct si_pub  si_t;
 #define WL_WSEC(x)
 #define WL_SCAN(x)
 
-#define LGE_ROAM_PARAMETER
-
 #include <wl_iw.h>
 
 
@@ -97,7 +95,6 @@ static int wl_iw_set_ap_security(struct net_device *dev, struct ap_profile *ap);
 static int wl_iw_softap_deassoc_stations(struct net_device *dev);
 #endif /* SOFTAP */
 
-static int wl_keep_alive_set(struct net_device *dev, char* extra);
 #define WL_IW_IOCTL_CALL(func_call) \
 	do {				\
 		func_call;		\
@@ -108,8 +105,9 @@ static int wl_keep_alive_set(struct net_device *dev, char* extra);
 		WL_ERROR(("%s: error : extra is null pointer\n", __FUNCTION__)); \
 		return -EINVAL; \
 	}
-
-static int		g_onoff = G_WLAN_SET_ON;
+// resumed_timeout_patch_1020
+//static int		g_onoff = G_WLAN_SET_ON;
+int		g_onoff = G_WLAN_SET_ON;
 wl_iw_extra_params_t	g_wl_iw_params;
 
 
@@ -171,7 +169,11 @@ static wlc_ssid_t g_ssid;
 static wl_iw_ss_cache_ctrl_t g_ss_cache_ctrl;	/* spec scan cache controller instance */
 static volatile uint g_first_broadcast_scan;	/* forcing first scan as always broadcast state  */
 static volatile uint g_first_counter_scans;
-#define MAX_ALLOWED_BLOCK_SCAN_FROM_FIRST_SCAN 3
+//bill.jung@lge.com
+//#define MAX_ALLOWED_BLOCK_SCAN_FROM_FIRST_SCAN 3
+#define MAX_ALLOWED_BLOCK_SCAN_FROM_FIRST_SCAN 1
+static volatile uint g_modify_scan_time = 0;
+
 
 //static wlc_ssid_t g_ssids[WL_SCAN_PARAMS_SSID_MAX];  /* Keep track of cached ssid */
 
@@ -195,7 +197,7 @@ extern bool PM_control;
 #endif /* LINUX_VERSION_CODE  */
 
 #if defined(WL_IW_USE_ISCAN)
-#if  !defined(CSCAN)
+#if  !defined(CSCAN) 
 static void wl_iw_free_ss_cache(void);
 static int   wl_iw_run_ss_cache_timer(int kick_off);
 #endif /* !defined(CSCAN) */
@@ -282,7 +284,7 @@ wl_iw_set_scan(
 	char *extra
 );
 
-#if !defined(CSCAN) // yhcha @ 110218
+#if !defined(CSCAN)
 static int
 wl_iw_get_scan(
 	struct net_device *dev,
@@ -298,7 +300,7 @@ wl_iw_get_scan_prep(
 	char *extra,
 	short max_size
 );
-#endif /*!defined(CSCAN)*/ // yhcha @ 110218
+#endif /*!defined(CSCAN)*/
 
 static void
 swap_key_from_BE(
@@ -453,6 +455,7 @@ dev_wlc_intvar_set(
 
 	return (dev_wlc_ioctl(dev, WLC_SET_VAR, buf, len));
 }
+
 
 #if defined(WL_IW_USE_ISCAN)
 static int
@@ -661,53 +664,6 @@ wl_iw_get_macaddr(
 
 
 /* Private IOCTL should provide country code as defined in ISO 3166-1 */
-/* BRCM_UPDATE_S for KEEP_ALIVE */
-static int wl_keep_alive_set(struct net_device *dev, char* extra)
-{
-	wl_keep_alive_pkt_t keep_alive_pkt;
-	wl_keep_alive_pkt_t *keep_alive_pktp;
-	int                     buf_len;
-	int                     str_len;
-	int ret = 0;
-	char buf[100]  = {0,};
-    uint period_msec = 0;
-
-    if( extra == NULL ) 
-    {
-        WL_ERROR(( "%s: extra is NULL\n", __FUNCTION__ ));
-        return -1;
-    }
-
-	if (sscanf(extra, "%*s %d", &period_msec) != 1)
-    {
-        WL_ERROR(( "%s: sscanf error. check period_msec value\n", __FUNCTION__ ));
-		return -EINVAL;
-    }
-	
-    WL_ERROR(( "%s: period_msec is %d\n", __FUNCTION__, period_msec ));
-
-	memset(&keep_alive_pkt, 0, sizeof(wl_keep_alive_pkt_t));
-
-    strcpy( buf, "keep_alive" );
-    str_len = strlen( buf );
-    buf[ str_len ] = '\0';
-
-	keep_alive_pktp = (wl_keep_alive_pkt_t *) (buf + str_len + 1);
-	keep_alive_pkt.period_msec = htod32(period_msec);		
-	keep_alive_pkt.len_bytes = 0;
-
-	buf_len = str_len + 1;
-	buf_len += (WL_KEEP_ALIVE_FIXED_LEN + keep_alive_pkt.len_bytes);
-
-	memcpy(keep_alive_pktp, &keep_alive_pkt, WL_KEEP_ALIVE_FIXED_LEN);
-
-	if( (ret= dev_wlc_ioctl(dev, WLC_SET_VAR, buf, buf_len)) < 0)
-		WL_ERROR(("%s:keep_alive set failed. ret[%d]\n",__FUNCTION__, ret));
-
-	return ret;
-}
-/* BRCM_UPDATE_E for KEEP_ALIVE */
-
 static int
 wl_iw_set_country(
 	struct net_device *dev,
@@ -835,7 +791,7 @@ wl_iw_get_power_mode(
 }
 #endif /* CONFIG_MACH_MAHIMAHI */
 
-#if !defined(CONFIG_LGE_BCM432X_PATCH) // yhcha@110218
+#if !defined(CONFIG_LGE_BCM432X_PATCH)
 static int
 wl_iw_set_btcoex_dhcp(
 	struct net_device *dev,
@@ -982,7 +938,7 @@ wl_iw_set_btcoex_dhcp(
 
 	return error;
 }
-#endif // yhcha @ 110218
+#endif
 
 static int
 wl_iw_set_suspend(
@@ -1710,6 +1666,17 @@ wl_iw_control_wl_off(
 
 		net_os_set_dtim_skip(dev, 0);
 
+		do
+		{
+			char buf[32] = {0,};
+			int len = 0;
+			/*Clear the present Hostip [if any]*/
+			len = bcm_mkiovar("arp_hostip_clear", NULL, 0, buf, sizeof(buf));
+			ASSERT(len);
+		
+			dev_wlc_ioctl(dev, WLC_SET_VAR, buf, len);
+		} while(0);
+
 		wl_iw_send_priv_event(dev, "STOP");
 
 	}
@@ -1744,22 +1711,6 @@ wl_iw_control_wl_on(
 
 	}
 
-// 20110413 mingi.sung@lge.com [Wi-Fi] Patch for BELKIN AP - to succeed DHCP procedure after wakeup [START]
-#if defined(CONFIG_BRCM_LGE_WL_ARPOFFLOAD)
-	do
-	{
-		char buf[32] = {0,};
-		int len = 0;
-		/*Clear the present Hostip [if any]*/
-		len = bcm_mkiovar("arp_hostip_clear", NULL, 0, buf, sizeof(buf));
-		ASSERT(len);
-
-		dev_wlc_ioctl(dev, WLC_SET_VAR, buf, len);
-
-	} while(0);
-#endif //CONFIG_BRCM_LGE_WL_ARPOFFLOAD
-// 20110413 mingi.sung@lge.com [Wi-Fi] Patch for BELKIN AP - to succeed DHCP procedure after wakeup [END]
-
 	wl_iw_send_priv_event(dev, "START");
 
 #ifdef SOFTAP
@@ -1792,11 +1743,6 @@ static int set_ap_mac_list(struct net_device *dev, char *buf);
 
 static int get_parameter_from_string(
 	char **str_ptr, const char *token, int param_type, void  *dst, int param_max_len);
-
-#ifdef CONFIG_LGE_BCM432X_PATCH
-static int get_SSID_from_string(
-	char **str_ptr, const char *token, int param_type, void  *dst, int ssid_len);
-#endif /*CONFIG_LGE_BCM432X_PATCH*/
 
 #if defined(CONFIG_LGE_BCM432X_PATCH)
 static int
@@ -1832,15 +1778,19 @@ wl_iw_control_wl_off_softap(
 
 #if defined(WL_IW_USE_ISCAN)
 
+//bill.jung@lg.com - Temp
+#if  !defined(CSCAN)
         wl_iw_free_ss_cache();
         wl_iw_run_ss_cache_timer(0);
-        memset(g_scan, 0, G_SCAN_RESULTS);
-
         g_ss_cache_ctrl.m_link_down = 1;
-        g_scan_specified_ssid = 0;
-
-        g_first_broadcast_scan = BROADCAST_SCAN_FIRST_IDLE;
 #endif
+        memset(g_scan, 0, G_SCAN_RESULTS);
+        g_scan_specified_ssid = 0;
+        g_first_broadcast_scan = BROADCAST_SCAN_FIRST_IDLE;
+		g_first_counter_scans = 0;		
+
+#endif
+
 
 #if defined(BCMLXSDMMC)
         sdioh_stop(NULL);
@@ -1934,9 +1884,6 @@ init_ap_profile_from_string(char *param_str, struct ap_profile *ap_cfg)
 	char *str_ptr = param_str;
 	char sub_cmd[16];
 	int ret = 0;
-#ifdef CONFIG_LGE_BCM432X_PATCH
-	uint32 ssid_len;
-#endif
 
 	memset(sub_cmd, 0, sizeof(sub_cmd));
 	memset(ap_cfg, 0, sizeof(struct ap_profile));
@@ -1951,21 +1898,10 @@ init_ap_profile_from_string(char *param_str, struct ap_profile *ap_cfg)
 		return -1;
 	}
 
-	printk(KERN_ERR "[SOFTAP] Input total string: %s\n", str_ptr);
-
 	/*  parse the string and write extracted values into the ap_profile structure */
 	/*  NOTE this function may alter the origibal string */
-#ifdef CONFIG_LGE_BCM432X_PATCH
-	ret = get_parameter_from_string(&str_ptr, "SSIDLEN=", PTYPE_INTDEC, &ssid_len, 5);
-#endif	/*CONFIG_LGE_BCM432X_PATCH*/
+	ret = get_parameter_from_string(&str_ptr, "SSID=", PTYPE_STRING, ap_cfg->ssid, SSID_LEN);
 
-#ifdef CONFIG_LGE_BCM432X_PATCH
-	if(ret == 0)
-		ret = get_SSID_from_string(&str_ptr, "SSID=", PTYPE_STRING, ap_cfg->ssid, ssid_len);
-	else
-#endif /*CONFIG_LGE_BCM432X_PATCH*/
-		ret = get_parameter_from_string(&str_ptr, "SSID=", PTYPE_STRING, ap_cfg->ssid, SSID_LEN);		
-	
 	ret |= get_parameter_from_string(&str_ptr, "SEC=", PTYPE_STRING,  ap_cfg->sec, SEC_LEN);
 
 	ret |= get_parameter_from_string(&str_ptr, "KEY=", PTYPE_STRING,  ap_cfg->key, KEY_LEN);
@@ -1975,6 +1911,23 @@ init_ap_profile_from_string(char *param_str, struct ap_profile *ap_cfg)
 	ret |= get_parameter_from_string(&str_ptr, "PREAMBLE=", PTYPE_INTDEC, &ap_cfg->preamble, 5);
 
 	ret |= get_parameter_from_string(&str_ptr, "MAX_SCB=", PTYPE_INTDEC,  &ap_cfg->max_scb, 5);
+
+
+// LGE_UPDATE_S bluetooth.kang@lge.com	 [SSID HIDDEN] 2010.5.10
+	/*ret |= */get_parameter_from_string(&str_ptr, "HIDDEN=",PTYPE_INTDEC,  &ap_cfg->closednet, 5);
+	/*ret |=*/ get_parameter_from_string(&str_ptr, "COUNTRY=",PTYPE_STRING,  &ap_cfg->country_code, 3);
+// LGE_UPDATE_E bluetooth.kang@lge.com	 [SSID HIDDEN] 2010.5.10
+
+
+	//bill.jung@lge.com - That's not a mandatory argument
+	//ret |= get_parameter_from_string(&str_ptr, "HIDDEN=",PTYPE_INTDEC,  &ap_cfg->closednet, 5);
+
+	//ret |= get_parameter_from_string(&str_ptr, "COUNTRY=",PTYPE_STRING,  &ap_cfg->country_code, 3);
+//	get_parameter_from_string(&str_ptr, "HIDDEN=",PTYPE_INTDEC,  &ap_cfg->closednet, 5);
+
+//	get_parameter_from_string(&str_ptr, "COUNTRY=",PTYPE_STRING,  &ap_cfg->country_code, 3);
+
+	
 
 	return ret;
 }
@@ -3501,12 +3454,14 @@ __u16 *merged_len)
 
 	DHD_OS_MUTEX_LOCK(&wl_cache_lock);
 	node = g_ss_cache_ctrl.m_cache_head;
+
 	for (;node;) {
- #ifdef CONFIG_LGE_BCM432X_PATCH
-	list_merge = (wl_scan_results_t *)&node->buflen;  
- #else
-	list_merge = (wl_scan_results_t *)node;
- #endif /* CONFIG_LGE_BCM432X_PATCH */
+#ifdef CONFIG_LGE_BCM432X_PATCH	
+		list_merge = (wl_scan_results_t *)&node->buflen;
+#else	
+		list_merge = (wl_scan_results_t *)node;
+#endif /* CONFIG_LGE_BCM432X_PATCH */
+	
 		WL_TRACE(("%s: Cached Specific APs list=%d\n", __FUNCTION__, list_merge->count));
 		if (buflen_from_user - *merged_len > 0) {
 			*merged_len += (__u16) wl_iw_get_scan_prep(list_merge, info,
@@ -3898,7 +3853,7 @@ wl_iw_handle_scanresults_ies(char **event_p, char *end,
 	return 0;
 }
 
-#if !defined(CSCAN) // yhcha @ 110218
+#if !defined(CSCAN)
 static uint
 wl_iw_get_scan_prep(
 	wl_scan_results_t *list,
@@ -3911,9 +3866,6 @@ wl_iw_get_scan_prep(
 	wl_bss_info_t *bi = NULL;
 	char *event = extra, *end = extra + max_size - WE_ADD_EVENT_FIX, *value;
 	int	ret = 0;
-#if defined(CONFIG_LGE_BCM432X_PATCH)
-   uint8	 channel;
-#endif
 
 	ASSERT(list);
 
@@ -3956,16 +3908,9 @@ wl_iw_get_scan_prep(
 
 		/* Channel */
 		iwe.cmd = SIOCGIWFREQ;
-#if defined(CONFIG_LGE_BCM432X_PATCH)
-		channel = (bi->ctl_ch == 0) ? CHSPEC_CHANNEL(bi->chanspec) : bi->ctl_ch;
-		iwe.u.freq.m = wf_channel2mhz(channel,
-												channel <= CH_MAX_2G_CHANNEL ?
-										  WF_CHAN_FACTOR_2_4_G : WF_CHAN_FACTOR_5_G);
-#else
 		iwe.u.freq.m = wf_channel2mhz(CHSPEC_CHANNEL(bi->chanspec),
 			CHSPEC_CHANNEL(bi->chanspec) <= CH_MAX_2G_CHANNEL ?
 			WF_CHAN_FACTOR_2_4_G : WF_CHAN_FACTOR_5_G);
-#endif		
 		iwe.u.freq.e = 6;
 		event = IWE_STREAM_ADD_EVENT(info, event, end, &iwe, IW_EV_FREQ_LEN);
 
@@ -4014,9 +3959,9 @@ wl_iw_get_scan_prep(
 	WL_TRACE(("%s: size=%d bytes prepared \n", __FUNCTION__, (unsigned int)(event - extra)));
 	return (uint)ret;
 }
-#endif /*!defined(CSCAN)*/ // yhcha @ 110218
+#endif /*!defined(CSCAN)*/
 
-#if !defined(CSCAN) // yhcha @ 110218
+#if !defined(CSCAN)
 static int
 wl_iw_get_scan(
 	struct net_device *dev,
@@ -4110,7 +4055,6 @@ wl_iw_get_scan(
 		if (g_scan_specified_ssid) {
 			g_scan_specified_ssid = 0;
 			kfree(list);
-			list = NULL;	// 20110511_WBT : ID 2165, 2177
 		}
 		return 0;
 	}
@@ -4134,7 +4078,6 @@ wl_iw_get_scan(
 		/* add newly specifically scanned AP into specific scan cache */
 		wl_iw_add_bss_to_ss_cache(list);
 		kfree(list);
-		list = NULL;	// 20110511_WBT : ID 2563
 	}
 #endif
 
@@ -4224,7 +4167,7 @@ wl_iw_get_scan(
 	WL_TRACE(("%s return to WE %d bytes APs=%d\n", __FUNCTION__, dwrq->length, list->count));
 	return 0;
 }
-#endif /*!define(CSCAN)*/ //yhcha @ 110218
+#endif /*!define(CSCAN)*/
 
 #if defined(WL_IW_USE_ISCAN)
 static int
@@ -4427,13 +4370,33 @@ wl_iw_iscan_get_scan(
 	/* first brodcast scan results gets consumed */
 	g_first_broadcast_scan = BROADCAST_SCAN_FIRST_RESULT_CONSUMED;
 
+/*
+	//bill.jung@lge.com
+	if( g_modify_scan_time != 0 )
+	{
+		int band = 0; // b/a band
+
+		g_modify_scan_time++;
+
+		if( g_modify_scan_time > 1 )
+		{
+			g_modify_scan_time = 0;
+			dev_wlc_ioctl(dev, WLC_SET_BAND, &band, sizeof(band));		
+			dev_wlc_intvar_set(dev, "scan_unassoc_time", 50);
+		
+			g_modify_scan_time = 0;
+		}
+	}
+*/
 	WL_TRACE(("%s return to WE %d bytes APs=%d\n", __FUNCTION__, dwrq->length, counter));
 
+// LGE_UPDATE_S  Bluetooth.kang@lge.com [2011.10.07] Current Comsumption problem solution
 #if !defined(CONFIG_LGE_BCM432X_PATCH)
 	/* if get scan was called too fast (aka iwlist) results maybe empty hence return again */
 	if (!dwrq->length)
 		return -EAGAIN;
-#endif //!CONFIG_LGE_BCM432X_PATCH
+#endif
+// LGE_UPDATE_S  [2011.10.07] Current Comsumption problem solution
 
 	return 0;
 }
@@ -5197,7 +5160,9 @@ wl_iw_set_power(
 
 	WL_TRACE(("%s: SIOCSIWPOWER\n", dev->name));
 
-	pm = vwrq->disabled ? PM_OFF : PM_MAX;
+	//bill.jung@lge.com - Don't use legacy power save mode.
+	//pm = vwrq->disabled ? PM_OFF : PM_MAX;
+	pm = vwrq->disabled ? PM_OFF : PM_FAST;
 
 	pm = htod32(pm);
 	if ((error = dev_wlc_ioctl(dev, WLC_SET_PM, &pm, sizeof(pm))))
@@ -5630,8 +5595,8 @@ wl_iw_set_wpaauth(
 				val = WPA2_AUTH_CCKM;
 			}
 			else /* IW_AUTH_WPA_VERSION_DISABLED */
-				val = WPA_AUTH_DISABLED;
-		}
+				val = WPA_AUTH_DISABLED;			
+		} 
 #endif /*BCMCCX*/
 		else if (paramval & IW_AUTH_KEY_MGMT_802_1X) {
 			if (iw->wpaversion == IW_AUTH_WPA_VERSION_WPA)
@@ -5886,8 +5851,8 @@ wl_iw_set_scan_channels(
 	}
 
 	switch (nchan) {
-	case 11: strcpy(buf, "US"); break;
-	case 13: strcpy(buf, "AU"); break;
+	case 11: strcpy(buf, "XW"); break;
+	case 13: strcpy(buf, "KR/3"); break;
 	case 14: strcpy(buf, "JP"); break;
 	default: return -EINVAL;
 	}
@@ -6453,6 +6418,18 @@ wl_iw_set_cscan(
 
 	net_os_wake_lock(dev);
 
+/*
+	//bill.jung@lge.com - Fast scan for supporting 5GHz.
+	if( g_first_broadcast_scan < BROADCAST_SCAN_FIRST_RESULT_CONSUMED )
+	{
+		int band = 2; //b band
+		
+		g_modify_scan_time = 1;
+		dev_wlc_ioctl(dev, WLC_SET_BAND, &band, sizeof(band));
+		dev_wlc_intvar_set(dev, "scan_unassoc_time", 10);
+	}
+*/
+
 	if (g_onoff == G_WLAN_SET_OFF) {
 		WL_TRACE(("%s: driver is not up yet after START\n", __FUNCTION__));
 		goto exit_proc;
@@ -6725,12 +6702,7 @@ get_softap_auto_channel(struct net_device *dev, struct ap_profile *ap)
 			if ((chosen == 1) && (!rescan++))
 				goto auto_channel_retry;
 			WL_SOFTAP(("Set auto channel = %d\n", chosen));
-
-#if !defined(CONFIG_LGE_BCM432X_PATCH)
 			ap->channel = chosen;
-#else
-			ap->channel = CHSPEC_CHANNEL(chosen);
-#endif
 			if ((res = dev_wlc_ioctl(dev, WLC_DOWN, &updown, sizeof(updown))) < 0) {
 				WL_ERROR(("%s fail to set up err =%d\n", __FUNCTION__, res));
 				goto fail;
@@ -6849,14 +6821,6 @@ set_ap_cfg(struct net_device *dev, struct ap_profile *ap)
 		WL_TRACE(("\n>in %s: apsta set result: %d \n", __FUNCTION__, res));
 #endif /* AP_ONLY */
 
-#if defined(CONFIG_LGE_BCM432X_PATCH)
-		 mpc = 0;
-		if ((res = dev_wlc_intvar_set(dev, "mpc", mpc))) {
-			  WL_ERROR(("%s fail to set mpc\n", __FUNCTION__));
-			  goto fail;
-		 }
-#endif
-
 		updown = 1;
 		if ((res = dev_wlc_ioctl(dev, WLC_UP, &updown, sizeof(updown))) < 0) {
 			WL_ERROR(("%s fail to set apsta \n", __FUNCTION__));
@@ -6879,6 +6843,32 @@ set_ap_cfg(struct net_device *dev, struct ap_profile *ap)
 		}
 	}
 
+
+// LGE_UPDATE_S bluetooth.kang@lge.com	 [SSID HIDDEN] 2010.5.10
+/*	
+	if (strlen(ap->country_code)) {
+		WL_ERROR(("%s: Igonored: Country MUST be specified \
+				  COUNTRY command with \n",	__FUNCTION__));
+	} else {
+		WL_SOFTAP(("%s: Country code is not specified,"
+			" will use Radio's default\n",
+			__FUNCTION__));
+
+	}
+*/
+
+
+	/*hidden AP set*/
+	iolen = wl_bssiovar_mkbuf("closednet",
+		bsscfg_index,  &ap->closednet, sizeof(ap->closednet)+4,
+		buf, sizeof(buf), &mkvar_err);
+	ASSERT(iolen);
+	if ((res = dev_wlc_ioctl(dev, WLC_SET_VAR, buf, iolen)) < 0) {
+		WL_ERROR(("%s failed to set 'closednet'for apsta \n", __FUNCTION__));
+		goto fail;
+	}
+
+// LGE_UPDATE_E bluetooth.kang@lge.com	 [SSID HIDDEN] 2010.5.10
 	/* ----  AP channel autoselect --- */
 	if ((ap->channel == 0) && (get_softap_auto_channel(dev, ap) < 0)) {
 		ap->channel = 1;
@@ -7236,47 +7226,6 @@ get_parameter_from_string(
 	 return -1;
 	}
 }
-
-#if CONFIG_LGE_BCM432X_PATCH
-static int
-get_SSID_from_string(
-			char **str_ptr, const char *token,
-			int param_type, void  *dst, int ssid_len)
-{
-	int parm_str_len= 0;
-	char  *param_str_begin;
-	char  *orig_str = *str_ptr;
-
-	if ((*str_ptr) && !strncmp(*str_ptr, token, strlen(token))) {
-
-		strsep(str_ptr, "="); /* find the 1st delimiter */
-		param_str_begin = *str_ptr;
-		//strsep(str_ptr, "=,"); /* find the 2nd delimiter */
-
-		if(ssid_len > SSID_LEN)
-			ssid_len = SSID_LEN;
-		
-		parm_str_len = ssid_len;
-
-		WL_TRACE((" 'token:%s', len:%d, ", token, parm_str_len));
-
-		/* param is array of ASCII chars, no convertion needed */
-		memcpy(dst, param_str_begin, parm_str_len);
-		*((char *)dst + parm_str_len) = 0; /* Z term */
-		WL_ERROR((" written as a string:%s\n", (char *)dst));
-
-		parm_str_len++;
-		*str_ptr += parm_str_len;
-		
-		return 0;
-	} else {
-		WL_ERROR(("\n %s: ERROR: can't find token:%s in str:%s \n",
-			__FUNCTION__, token, orig_str));
-
-	 return -1;
-	}
-}
-#endif /*CONFIG_LGE_BCM432X_PATCH*/
 
 /*
  *   ====== deassociate/deauthenticate SOFTAP stations ======
@@ -7786,81 +7735,6 @@ wl_iw_get_assoc_res_ies(
 #endif /* BCMCCX */
 /* LGE_CHANGE_E, 2011-0226, add CCX */
 
-/* LGE_UPDATE_S 20110708 BRCM patch */
-#ifdef LGE_ROAM_PARAMETER
-static int
-wl_iw_process_private_roam_cmd(
-			struct net_device *dev,
-			struct iw_request_info *info,
-			union iwreq_data *dwrq,
-			char *extra)
-{
-	int ret = -1;
-    unsigned int value = 0;
-    unsigned int iocmd = 0;
-	char *sub_cmd = extra + strlen("ROAM_CMD=");
-
-	WL_TRACE(("\n%s: ROAM_CMD: offs_0:%s, offset_32:\n'%s'\n",
-		__FUNCTION__, extra, extra + strlen("ROAM_CMD=")));
-
-	if( strnicmp(sub_cmd, "GET_ROAM_TRIGGER", strlen("GET_ROAM_TRIGGER")) == 0 ) 
-        iocmd = WLC_GET_ROAM_TRIGGER;
-    else if( strnicmp(sub_cmd, "SET_ROAM_TRIGGER", strlen("SET_ROAM_TRIGGER")) == 0 )
-        iocmd = WLC_SET_ROAM_TRIGGER;
-    else if( strnicmp(sub_cmd, "GET_ROAM_DELTA", strlen("GET_ROAM_DELTA")) == 0 )
-        iocmd = WLC_GET_ROAM_DELTA;
-    else if( strnicmp(sub_cmd, "SET_ROAM_DELTA", strlen("SET_ROAM_DELTA")) == 0 )
-        iocmd = WLC_SET_ROAM_DELTA;
-    else if( strnicmp(sub_cmd, "GET_ROAM_SCAN_PERIOD", strlen("GET_ROAM_SCAN_PERIOD")) == 0 ) 
-        iocmd = WLC_GET_ROAM_SCAN_PERIOD;
-    else if( strnicmp(sub_cmd, "SET_ROAM_SCAN_PERIOD", strlen("SET_ROAM_SCAN_PERIOD")) == 0 ) 
-        iocmd = WLC_SET_ROAM_SCAN_PERIOD;
-    else
-    {
-        WL_ERROR(("%s: command parsing error %s\n",__FUNCTION__, extra));
-        return ret;
-    }
-
-    if( strnicmp( sub_cmd, "GET", strlen("GET") ) == 0 )
-    {
-        char* p = extra;
-		WL_TRACE(("%s: iocmd = %d\n", __FUNCTION__, iocmd));
-
-        if ((ret = dev_wlc_ioctl(dev, iocmd, &value, sizeof(value) )))
-        {
-            WL_ERROR(("%s: dev_wlc_ioctl returned error %d\n",__FUNCTION__, ret));
-            WL_TRACE(("%d, %d\n", value, dtoh32(value)));
-            return ret;
-        }
-
-		WL_TRACE(("%d\n", dtoh32(value)));
-
-        p += snprintf(p, MAX_WX_STRING, "%d", dtoh32(value) );
-        dwrq->data.length = p - extra + 1;
-    }
-    else if( strnicmp( sub_cmd, "SET", strlen("SET") ) == 0 )
-    {
-		WL_TRACE(("%s: %s ", __FUNCTION__, sub_cmd));
-        if( sscanf(sub_cmd, "%*s %d", &value) != 1 ) 
-        {
-            WL_ERROR(("%s: sscanf parsing error %s\n",__FUNCTION__, sub_cmd));
-            return -1;
-        }
-
-        if ((ret = dev_wlc_ioctl(dev, iocmd, &value, sizeof(value) )))
-        {
-            WL_ERROR(("%s: dev_wlc_ioctl returned error %d, value = %d\n",__FUNCTION__, ret, value ));
-            return ret;
-        }
-
-		WL_TRACE(("%d has been set\n", value));
-    }
-
-	return ret;
-}
-#endif //LGE_ROAM_PARAMETER
-/* LGE_UPDATE_E 20110708 BRCM patch */
-
 static int
 wl_iw_set_priv(
 	struct net_device *dev,
@@ -8048,10 +7922,6 @@ wl_iw_set_priv(
 		}else if (strnicmp(extra, "VOIP-STOP", 9) == 0) {
 			wl_iw_voip_stop(dev);
 		}
-		else if (strnicmp(extra, "KEEP_ALIVE", strlen("KEEP_ALIVE")) == 0)
-		{
-			ret = wl_keep_alive_set(dev, extra);
-		}
 #endif /* CONFIG_LGE_BCM432X_PATCH */
 
 #ifdef SOFTAP
@@ -8075,15 +7945,6 @@ wl_iw_set_priv(
 			ret = wl_iw_get_assoc_res_ies(dev, info, (union iwreq_data *)dwrq, extra);
 #endif /* BCMCCX */
 /* LGE_CHANGE_E, 2011-0226, BRCM patch */
-
-/* LGE_UPDATE_S 20110708 BRCM patch */
-#ifdef LGE_ROAM_PARAMETER
-        else if( strnicmp( extra, "ROAM_CMD", strlen("ROAM_CMD") ) == 0 )
-            ret = wl_iw_process_private_roam_cmd( dev, info, (union iwreq_data *)dwrq, extra );
-#endif //LGE_ROAM_PARAMETER
-/* LGE_UPDATE_E 20110708 BRCM patch */
-
-
 
 	    else {
 			WL_TRACE(("Unknown PRIVATE command %s\n", extra));
@@ -8923,7 +8784,6 @@ wl_iw_event(struct net_device *dev, wl_event_msg_t *e, void* data)
 		} else {
 			cmd = SIOCGIWSCAN;
 			wrqu.data.length = strlen(extra);
-			if(g_iscan != NULL) 
 			WL_TRACE(("Event WLC_E_SCAN_COMPLETE from specific scan %d\n",
 				g_iscan->iscan_state));
 		}

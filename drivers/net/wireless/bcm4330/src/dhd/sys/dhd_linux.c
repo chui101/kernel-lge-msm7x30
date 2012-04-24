@@ -415,7 +415,11 @@ module_param_string(config_path, config_path, MOD_PARAM_PATHLEN, 0);
 /* LGE_CHANGE_E [yoohoo@lge.com] 2009-04-03, configs */
 
 /* Watchdog interval */
-uint dhd_watchdog_ms = 10;
+//bill.jung@lge.com - Power consumption isssue.
+//uint dhd_watchdog_ms = 10;
+//uint dhd_watchdog_ms = 1000;
+uint dhd_watchdog_ms = 20;		// bluetooth.kang@lge.com  due to clock off timing problem.
+
 module_param(dhd_watchdog_ms, uint, 0);
 
 #if defined(DHD_DEBUG)
@@ -652,15 +656,21 @@ static void dhd_set_packet_filter(int value, dhd_pub_t *dhd)
 #endif
 }
 
+extern int dhd_get_dtim_skip(dhd_pub_t *dhd);
+
 #if defined(CONFIG_HAS_EARLYSUSPEND)
 static int dhd_set_suspend(int value, dhd_pub_t *dhd)
 {
 #if !defined(CONFIG_LGE_BCM432X_PATCH)
-	int power_mode = PM_MAX;
+
+	//bill.jung@lge.com - Don't use legacy power save mode.
+	//int power_mode = PM_MAX;
+	int power_mode = PM_FAST;
+
 	/* wl_pkt_filter_enable_t	enable_parm; */
-	char iovbuf[32];
-	int bcn_li_dtim = 3;
 #endif
+	int bcn_li_dtim = 3;
+	char iovbuf[32];
 #ifdef CONFIG_MACH_MAHIMAHI
 	uint roamvar = 1;
 #endif /* CONFIG_MACH_MAHIMAHI */
@@ -680,21 +690,18 @@ static int dhd_set_suspend(int value, dhd_pub_t *dhd)
 #endif
 
 				/* Enable packet filter, only allow unicast packet to send up */
-//				dhd_set_packet_filter(1, dhd);
+				dhd_set_packet_filter(1, dhd);
 
-#if !defined(CONFIG_LGE_BCM432X_PATCH)
 				/* If DTIM skip is set up as default, force it to wake
 				 * each third DTIM for better power savings.  Note that
 				 * one side effect is a chance to miss BC/MC packet.
-				 */
-				if ((dhd->dtim_skip == 0) || (dhd->dtim_skip == 1))
-					bcn_li_dtim = 3;
-				else
-					bcn_li_dtim = dhd->dtim_skip;
+				 */				
+				 
+				bcn_li_dtim = dhd_get_dtim_skip(dhd);				
 				bcm_mkiovar("bcn_li_dtim", (char *)&bcn_li_dtim,
 					4, iovbuf, sizeof(iovbuf));
 				dhd_wl_ioctl_cmd(dhd, WLC_SET_VAR, iovbuf, sizeof(iovbuf), TRUE, 0);
-#endif
+
 #ifdef CONFIG_MACH_MAHIMAHI
 				/* Disable built-in roaming to allow
 				 * supplicant to take care of it.
@@ -703,6 +710,18 @@ static int dhd_set_suspend(int value, dhd_pub_t *dhd)
 					iovbuf, sizeof(iovbuf));
 				dhd_wl_ioctl_cmd(dhd, WLC_SET_VAR, iovbuf, sizeof(iovbuf), TRUE, 0);
 #endif /* CONFIG_MACH_MAHIMAHI */
+				
+				//bill.jung@lge.com - For turning down Clock
+				//dhd_os_sdlock(dhd);
+				{
+					int i=0;
+					for( i=0; i<5; i++)
+					{
+						dhd_bus_watchdog(dhd);
+					}
+				}
+				//dhd_os_sdunlock(dhd);
+				//bill.jung@lge.com
 			} else {
 
 				/* Kernel resumed  */
@@ -715,15 +734,13 @@ static int dhd_set_suspend(int value, dhd_pub_t *dhd)
 #endif
 
 				/* disable pkt filter */
-//				dhd_set_packet_filter(0, dhd);
+				dhd_set_packet_filter(0, dhd);
 
-#if !defined(CONFIG_LGE_BCM432X_PATCH)
 				/* restore pre-suspend setting for dtim_skip */
 				bcm_mkiovar("bcn_li_dtim", (char *)&dhd->dtim_skip,
 					4, iovbuf, sizeof(iovbuf));
 
 				dhd_wl_ioctl_cmd(dhd, WLC_SET_VAR, iovbuf, sizeof(iovbuf), TRUE, 0);
-#endif
 #ifdef CONFIG_MACH_MAHIMAHI
 				roamvar = dhd_roam_disable;
 				bcm_mkiovar("roam_off", (char *)&roamvar, 4, iovbuf,
@@ -2629,9 +2646,11 @@ dhd_bus_start(dhd_pub_t *dhdp)
 #endif /* PNO_SUPPORT */
 
 /* enable dongle roaming event */
-/* LGE_DEV_PORTING, [jongpil.yoon@lge.com], 2011-04-07, <current issue because of L2 Roaming> */
+/* LGE_DEV_PORTING, [jongpil.yoon@lge.com], 2011-03-28, <Resolve the current issue because of the trial of L2 roaming> */
+#if defined(CONFIG_LGE_BCM432X_PATCH)
 	//setbit(dhdp->eventmask, WLC_E_ROAM);
-/* LGE_DEV_END, [jongpil.yoon@lge.com], 2011-04-07, <current issue because of L2 Roaming> */
+#endif 
+/* LGE_DEV_END, [jongpil.yoon@lge.com], 2011-03-28, <Resolve the current issue because of the trial of L2 roaming> */
 
 	dhdp->pktfilter_count = 1;
 	/* Setup filter to allow only unicast */
@@ -2996,18 +3015,25 @@ dhd_module_cleanup(void)
 /* LGE_CHANGE_S [yoohoo@lge.com] 2009-03-05, for gpio set in dhd_linux */
 #if defined(CONFIG_LGE_BCM432X_PATCH)
 	//gpio_tlmm_config(GPIO_CFG(CONFIG_BCM4330_GPIO_WL_RESET, 0, GPIO_OUTPUT, GPIO_NO_PULL, GPIO_2MA), GPIO_ENABLE);
+//#if 0 // yhcha 0608
 	if (!gpio_get_value(CONFIG_BCM4330_GPIO_WL_RESET)) {
 		gpio_set_value(CONFIG_BCM4330_GPIO_WL_RESET, 1);
 		enable_irq(gpio_to_irq(CONFIG_BCM4330_GPIO_WL_RESET));
 	}	
 	gpio_set_value(CONFIG_BCM4330_GPIO_WL_RESET, 0);
+//#endif // yhcha 0608
+	
+	//bill.jung@lge.com - Temp
+	//dhd_customer_gpio_wlan_ctrl(WLAN_RESET_OFF);
 	//gpio_tlmm_config(GPIO_CFG(CONFIG_BCM4330_GPIO_WL_RESET, 0, GPIO_INPUT, GPIO_NO_PULL, GPIO_2MA), GPIO_ENABLE);
 #endif /* CONFIG_LGE_BCM432X_PATCH */
 /* LGE_CHANGE_E [yoohoo@lge.com] 2009-03-05, for gpio set in dhd_linux */
 
 	/* Call customer gpio to turn off power with WL_REG_ON signal */
 	dhd_customer_gpio_wlan_ctrl(WLAN_POWER_OFF);
+
 }
+
 
 
 static int __init
@@ -3016,7 +3042,8 @@ dhd_module_init(void)
 	int error;
 
 	DHD_TRACE(("%s: Enter\n", __FUNCTION__));
-
+	
+	
 #ifdef DHDTHREAD
 	/* Sanity check on the module parameters */
 	do {
@@ -3068,7 +3095,9 @@ dhd_module_init(void)
 
 /* LGE_CHANGE_S [yoohoo@lge.com] 2009-03-05, for gpio set in dhd_linux */
 #if defined(CONFIG_LGE_BCM432X_PATCH)
-	gpio_set_value(CONFIG_BCM4330_GPIO_WL_RESET, 1);
+	//bill.jung@lge.com
+	//gpio_set_value(CONFIG_BCM4330_GPIO_WL_RESET, 1);
+	dhd_customer_gpio_wlan_ctrl(WLAN_RESET_ON);
 #endif /* CONFIG_LGE_BCM432X_PATCH */
 /* LGE_CHANGE_E [yoohoo@lge.com] 2009-03-05, for gpio set in dhd_linux */
 
@@ -3905,6 +3934,8 @@ int net_os_wake_unlock(struct net_device *dev)
 	return ret;
 }
 
+// resumed_timeout_patch_1020
+extern int g_onoff;
 int net_os_send_hang_message(struct net_device *dev)
 {
 	dhd_info_t *dhd = *(dhd_info_t **)netdev_priv(dev);
@@ -3913,6 +3944,8 @@ int net_os_send_hang_message(struct net_device *dev)
 	if (dhd) {
 		if (!dhd->hang_was_sent) {
 			dhd->hang_was_sent = 1;
+// resumed_timeout_patch_1020
+			g_onoff = G_WLAN_SET_OFF;
 			ret = wl_iw_send_priv_event(dev, "HANG");
 		}
 	}
