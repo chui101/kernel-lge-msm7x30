@@ -47,7 +47,7 @@
 #if 0
 #define MSM_PMEM_ADSP_SIZE      0x1800000
 #else
-#define MSM_PMEM_ADSP_SIZE      0x1B00000
+#define MSM_PMEM_ADSP_SIZE      0x2000000
 #endif
 //[LGE_UPDATE_E] taeyol.kim@lge.com 2011-06-27
 #define MSM_FLUID_PMEM_ADSP_SIZE	0x2800000
