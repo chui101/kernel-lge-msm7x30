@@ -798,7 +798,7 @@ static int tcm9000md_sensor_probe(const struct msm_camera_sensor_info *info,
 	if (board_is_rev("rev_c"))
 		s->s_mount_angle = 90;
 	else if (board_is_rev("rev_10"))
-		s->s_mount_angle = 90;
+		s->s_mount_angle = 0;
 	else
 		s->s_mount_angle = 180;
 #endif
