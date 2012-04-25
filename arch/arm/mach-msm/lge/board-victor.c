@@ -28,7 +28,7 @@
 #include <mach/dma.h>
 #include <mach/msm_hsusb.h>
 #include <mach/rpc_hsusb.h>
-#ifdef CONFIG_USB_ANDROID
+#ifdef CONFIG_USB_G_ANDROID
 #include <linux/usb/android_composite.h>
 #endif
 
@@ -46,7 +46,7 @@
 //LGE_FW_TDMB [END]
 /* board-specific usb data definitions */
 /* QCT originals are in device_lge.c, not here */
-#ifdef CONFIG_USB_ANDROID
+#ifdef CONFIG_USB_G_ANDROID
 /* LGE_CHANGE
  * Currently, LG Android host driver has 2 USB bind orders as following;
  * - Android Platform : MDM + DIAG + GPS + UMS + ADB
