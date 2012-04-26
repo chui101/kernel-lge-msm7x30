@@ -9,7 +9,6 @@
 #define KGSL_CONTEXT_NO_GMEM_ALLOC	2
 #define KGSL_CONTEXT_SUBMIT_IB_LIST	4
 #define KGSL_CONTEXT_CTX_SWITCH	8
-#define KGSL_CONTEXT_PREAMBLE	16
 
 /* Memory allocayion flags */
 #define KGSL_MEMFLAGS_GPUREADONLY	0x01000000
@@ -44,7 +43,6 @@ enum kgsl_user_mem_type {
 	KGSL_USER_MEM_TYPE_ASHMEM	= 0x00000001,
 	KGSL_USER_MEM_TYPE_ADDR		= 0x00000002,
 	KGSL_USER_MEM_TYPE_ION		= 0x00000003,
-	KGSL_USER_MEM_TYPE_MAX		= 0x00000004,
 };
 
 struct kgsl_devinfo {
@@ -113,7 +111,6 @@ struct kgsl_shadowprop {
 struct kgsl_pwrlevel {
 	unsigned int gpu_freq;
 	unsigned int bus_freq;
-	unsigned int io_fraction;
 };
 
 struct kgsl_version {
@@ -144,7 +141,6 @@ struct kgsl_device_pwr_data {
 	int (*set_grp_async)(void);
 	unsigned int idle_timeout;
 	unsigned int nap_allowed;
-	unsigned int idle_needed;
 };
 
 struct kgsl_clk_data {

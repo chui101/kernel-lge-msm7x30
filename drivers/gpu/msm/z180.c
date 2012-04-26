@@ -149,6 +149,7 @@ static struct z180_device device_2d0 = {
 			.config = Z180_MMU_CONFIG,
 		},
 		.pwrctrl = {
+			.pwr_rail = PWR_RAIL_GRP_2D_CLK,
 			.regulator_name = "fs_gfx2d0",
 			.irq_name = KGSL_2D0_IRQ,
 		},
@@ -187,6 +188,7 @@ static struct z180_device device_2d1 = {
 			.config = Z180_MMU_CONFIG,
 		},
 		.pwrctrl = {
+			.pwr_rail = PWR_RAIL_GRP_2D_CLK,
 			.regulator_name = "fs_gfx2d1",
 			.irq_name = KGSL_2D1_IRQ,
 		},
@@ -583,8 +585,6 @@ static int z180_stop(struct kgsl_device *device)
 {
 	device->ftbl->irqctrl(device, 0);
 	z180_idle(device, KGSL_TIMEOUT_DEFAULT);
-
-	del_timer_sync(&device->idle_timer);
 
 	kgsl_mmu_stop(device);
 
