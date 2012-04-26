@@ -1,5 +1,4 @@
 /* Copyright (c) 2002,2007-2011, Code Aurora Forum. All rights reserved.
- * Copyright (C) 2011 Sony Ericsson Mobile Communications AB.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -23,6 +22,7 @@
 #include "kgsl_mmu.h"
 #include "kgsl_device.h"
 #include "kgsl_sharedmem.h"
+#include "adreno_postmortem.h"
 
 #define KGSL_MMU_ALIGN_SHIFT    13
 #define KGSL_MMU_ALIGN_MASK     (~((1 << KGSL_MMU_ALIGN_SHIFT) - 1))
@@ -315,13 +315,16 @@ int kgsl_mmu_init(struct kgsl_device *device)
 
 	mmu->device = device;
 
-	if (KGSL_MMU_TYPE_NONE == kgsl_mmu_type ||
-	    KGSL_MMU_TYPE_IOMMU == kgsl_mmu_type) {
+	if (KGSL_MMU_TYPE_NONE == kgsl_mmu_type) {
 		dev_info(device->dev, "|%s| MMU type set for device is "
 			"NOMMU\n", __func__);
 		return 0;
 	} else if (KGSL_MMU_TYPE_GPU == kgsl_mmu_type)
 		mmu->mmu_ops = &gpummu_ops;
+#ifdef CONFIG_MSM_IOMMU
+	else if (KGSL_MMU_TYPE_IOMMU == kgsl_mmu_type)
+		mmu->mmu_ops = &iommu_ops;
+#endif
 
 	return mmu->mmu_ops->mmu_init(device);
 }
@@ -419,6 +422,10 @@ static struct kgsl_pagetable *kgsl_mmu_createpagetableobject(
 
 	if (KGSL_MMU_TYPE_GPU == kgsl_mmu_type)
 		pagetable->pt_ops = &gpummu_pt_ops;
+#ifdef CONFIG_MSM_IOMMU
+	else if (KGSL_MMU_TYPE_IOMMU == kgsl_mmu_type)
+		pagetable->pt_ops = &iommu_pt_ops;
+#endif
 
 	pagetable->priv = pagetable->pt_ops->mmu_create_pagetable();
 	if (!pagetable->priv)
@@ -455,6 +462,8 @@ struct kgsl_pagetable *kgsl_mmu_getpagetable(unsigned long name)
 		return (void *)(-1);
 
 #ifdef CONFIG_KGSL_PER_PROCESS_PAGE_TABLE
+	if (KGSL_MMU_TYPE_IOMMU == kgsl_mmu_type)
+		name = KGSL_MMU_GLOBAL_PT;
 #else
 		name = KGSL_MMU_GLOBAL_PT;
 #endif
@@ -707,13 +716,11 @@ EXPORT_SYMBOL(kgsl_mmu_get_mmutype);
 
 void kgsl_mmu_set_mmutype(char *mmutype)
 {
-	kgsl_mmu_type = KGSL_MMU_TYPE_NONE;
-#ifdef CONFIG_MSM_KGSL_GPUMMU
-	kgsl_mmu_type = KGSL_MMU_TYPE_GPU;
-#elif defined(CONFIG_MSM_KGSL_IOMMU)
-#endif
+	kgsl_mmu_type = iommu_found() ? KGSL_MMU_TYPE_IOMMU : KGSL_MMU_TYPE_GPU;
 	if (mmutype && !strncmp(mmutype, "gpummu", 6))
 		kgsl_mmu_type = KGSL_MMU_TYPE_GPU;
+	if (iommu_found() && mmutype && !strncmp(mmutype, "iommu", 5))
+		kgsl_mmu_type = KGSL_MMU_TYPE_IOMMU;
 	if (mmutype && !strncmp(mmutype, "nommu", 5))
 		kgsl_mmu_type = KGSL_MMU_TYPE_NONE;
 }

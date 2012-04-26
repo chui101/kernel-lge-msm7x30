@@ -1,5 +1,4 @@
-/* Copyright (c) 2002,2007-2011, Code Aurora Forum. All rights reserved.
- * Copyright (C) 2011 Sony Ericsson Mobile Communications AB.
+/* Copyright (c) 2002,2007-2012, Code Aurora Forum. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -16,11 +15,8 @@
 
 #include <linux/slab.h>
 #include <linux/dma-mapping.h>
-
-/*
- * Convert a page to a physical address
- */
-#define phys_to_page(phys)	(pfn_to_page(__phys_to_pfn(phys)))
+#include <linux/vmalloc.h>
+#include "kgsl_mmu.h"
 
 struct kgsl_device;
 struct kgsl_process_private;
@@ -86,7 +82,7 @@ memdesc_sg_phys(struct kgsl_memdesc *memdesc,
 {
 	struct page *page = phys_to_page(physaddr);
 
-	memdesc->sg = kmalloc(sizeof(struct scatterlist) * 1, GFP_KERNEL);
+	memdesc->sg = vmalloc(sizeof(struct scatterlist) * 1);
 	if (memdesc->sg == NULL)
 		return -ENOMEM;
 
@@ -100,11 +96,9 @@ static inline int
 kgsl_allocate(struct kgsl_memdesc *memdesc,
 		struct kgsl_pagetable *pagetable, size_t size)
 {
-#ifdef CONFIG_MSM_KGSL_MMU
+	if (kgsl_mmu_get_mmutype() == KGSL_MMU_TYPE_NONE)
+		return kgsl_sharedmem_ebimem(memdesc, pagetable, size);
 	return kgsl_sharedmem_vmalloc(memdesc, pagetable, size);
-#else
-	return kgsl_sharedmem_ebimem(memdesc, pagetable, size);
-#endif
 }
 
 static inline int
@@ -112,21 +106,18 @@ kgsl_allocate_user(struct kgsl_memdesc *memdesc,
 		struct kgsl_pagetable *pagetable,
 		size_t size, unsigned int flags)
 {
-#ifdef CONFIG_MSM_KGSL_MMU
+	if (kgsl_mmu_get_mmutype() == KGSL_MMU_TYPE_NONE)
+		return kgsl_sharedmem_ebimem_user(memdesc, pagetable, size,
+						  flags);
 	return kgsl_sharedmem_vmalloc_user(memdesc, pagetable, size, flags);
-#else
-	return kgsl_sharedmem_ebimem_user(memdesc, pagetable, size, flags);
-#endif
 }
 
 static inline int
 kgsl_allocate_contiguous(struct kgsl_memdesc *memdesc, size_t size)
 {
 	int ret  = kgsl_sharedmem_alloc_coherent(memdesc, size);
-#ifndef CONFIG_MSM_KGSL_MMU
-	if (!ret)
+	if (!ret && (kgsl_mmu_get_mmutype() == KGSL_MMU_TYPE_NONE))
 		memdesc->gpuaddr = memdesc->physaddr;
-#endif
 	return ret;
 }
 
