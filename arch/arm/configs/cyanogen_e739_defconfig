@@ -1337,6 +1337,7 @@ CONFIG_SERIAL_BCM_BT_LPM=y
 #
 # Diag Support
 #
+CONFIG_DIAG_CHAR=y
 
 #
 # DIAG traffic over USB
