@@ -94,9 +94,6 @@ DECLARE_DELAYED_WORK(sleep_workqueue, bluesleep_sleep_work);
 #define BT_PROTO	0x01
 #define BT_TXDATA	0x02
 #define BT_ASLEEP	0x04
-#ifndef CONFIG_LGE_BRCM_H4_LPM_SUPPORT_PATCH
-#define CONFIG_LGE_BRCM_H4_LPM_SUPPORT_PATCH
-#endif
 
 //Un-comment for root permission
 //#define BTLA_ROOT_PERMISSION
