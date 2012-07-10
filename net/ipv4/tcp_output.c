@@ -123,7 +123,7 @@ static __u16 tcp_advertise_mss(struct sock *sk)
 		mss = dst_metric(dst, RTAX_ADVMSS);
 		tp->advmss = mss;
 	}
-#if defined(CONFIG_LGE_MODEL_E739)	 //kidong.kim
+#if defined(CONFIG_LGE_MODEL_E739) || defined(CONFIG_LGE_MODEL_C800)	 //kidong.kim
 	mss = 1400;	
     tp->advmss = mss;
 #endif //CONFIG_LGE_MODEL_E739	
@@ -226,14 +226,14 @@ void tcp_select_initial_window(int __space, __u32 mss,
 			(*rcv_wscale)++;
 		}
 	}
-#if defined(CONFIG_LGE_MODEL_E739)	 //kidong.kim
+#if defined(CONFIG_LGE_MODEL_E739) || defined(CONFIG_LGE_MODEL_C800)	 //kidong.kim
     (*rcv_wnd) = space;
 #endif //CONFIG_LGE_MODEL_E739	
 	/* Set initial window to value enough for senders,
 	 * following RFC2414. Senders, not following this RFC,
 	 * will be satisfied with 2.
 	 */
-#if !defined(CONFIG_LGE_MODEL_E739)	 //kidong.kim
+#if !defined(CONFIG_LGE_MODEL_E739) || defined(CONFIG_LGE_MODEL_C800) 	 //kidong.kim
 	if (mss > (1 << *rcv_wscale)) {
 		int init_cwnd = 4;
 		if (mss > 1460 * 3)

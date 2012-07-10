@@ -901,7 +901,7 @@ static void mdp_drv_init(void)
 		atomic_set(&mdp_block_power_cnt[i], 0);
 	}
 
-#ifdef CONFIG_MACH_MSM8X55_VICTOR
+#if defined(CONFIG_MACH_MSM8X55_VICTOR) || defined(CONFIG_MACH_MSM8X55_UNIVA_Q)
 	/* LGE_CHANGE
 	 *     to avoid the display off in boot time
 	 *     2011-03-14 cheongil.hyun@lge.com
@@ -1519,7 +1519,7 @@ static int mdp_probe(struct platform_device *pdev)
 #ifdef CONFIG_PM
 static void mdp_suspend_sub(void)
 {
-#ifdef CONFIG_MACH_MSM8X55_VICTOR
+#if defined(CONFIG_MACH_MSM8X55_VICTOR) || defined(CONFIG_MACH_MSM8X55_UNIVA_Q)
 	static int s_b_first = TRUE;
 #endif
 
@@ -1529,7 +1529,7 @@ static void mdp_suspend_sub(void)
 	/* for workder can't be cancelled... */
 	flush_workqueue(mdp_pipe_ctrl_wq);
 
-#ifdef CONFIG_MACH_MSM8X55_VICTOR
+#if defined(CONFIG_MACH_MSM8X55_VICTOR) || defined(CONFIG_MACH_MSM8X55_UNIVA_Q)
 	/* LGE_CHANGE
 	 *      to avoid the display off in boot time
 	 *      2011-03-14 cheongil.hyun@lge.com

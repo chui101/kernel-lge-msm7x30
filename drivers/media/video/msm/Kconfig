@@ -157,6 +157,13 @@ config VB6801
 	---help---
 	  5M with flash
 
+config LM2759_FLASH
+        bool "LM2759 flash support"
+        depends on MSM_CAMERA && !ARCH_MSM8X60
+        default n
+        ---help---
+          Enable support for LM2759 flash for msm camera
+
 config MSM_CAMERA_FLASH
 	bool "Qualcomm MSM camera flash support"
 	depends on MSM_CAMERA

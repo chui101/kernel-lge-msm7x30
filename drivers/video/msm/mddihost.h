@@ -243,5 +243,8 @@ void mddi_window_adjust(struct msm_fb_data_type *mfd,
 	uint16 x1, uint16 x2, uint16 y1, uint16 y2);
 void mddi_send_fw_link_skew_cal(mddi_host_type host_idx);
 int pmdh_clk_func(int enable);
+#if defined(CONFIG_MACH_MSM8X55_UNIVA_Q) || defined(CONFIG_MACH_MSM8X55_FLIP)
+void mddi_host_register_cmds_write32(unsigned reg_addr, unsigned count, unsigned int reg_val[], boolean wait, mddi_llist_done_cb_type done_cb, mddi_host_type host);
+#endif
 
 #endif /* MDDIHOST_H */

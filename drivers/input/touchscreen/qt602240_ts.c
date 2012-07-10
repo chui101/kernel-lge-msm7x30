@@ -23,7 +23,7 @@
 #include <linux/interrupt.h>
 #include <linux/slab.h>
 
-#ifdef CONFIG_MACH_MSM8X55_VICTOR
+#if defined(CONFIG_MACH_MSM8X55_VICTOR) || defined(CONFIG_MACH_MSM8X55_UNIVA_Q)
 /* LGE_CHANGE
   * For qt602240_ts bring up for Victor
   * 2011-01-25, guilbert.lee@lge.com
@@ -41,7 +41,7 @@
 #define QT602240_VER_20			20
 #define QT602240_VER_21			21
 #define QT602240_VER_22			22
-#ifdef CONFIG_MACH_MSM8X55_VICTOR
+#if defined(CONFIG_MACH_MSM8X55_VICTOR) || defined(CONFIG_MACH_MSM8X55_UNIVA_Q)
 	#define QT602240_VER_32		32
 #endif
 
@@ -214,7 +214,7 @@
 #define QT602240_DETECT			(1 << 7)
 
 /* Touchscreen absolute values */
-#ifdef CONFIG_MACH_MSM8X55_VICTOR
+#if defined(CONFIG_MACH_MSM8X55_VICTOR) || defined(CONFIG_MACH_MSM8X55_UNIVA_Q)
 /* LGE_CHANGE
   * For qt602240_ts bring up for Victor
   * 2011-01-25, guilbert.lee@lge.com
@@ -314,7 +314,7 @@ static const u8 init_vals_ver_21[] = {
 	0x00, 0x00, 0x00, 0x08, 0x10, 0x00,
 };
 
-#ifdef CONFIG_MACH_MSM8X55_VICTOR
+#if defined(CONFIG_MACH_MSM8X55_VICTOR) || defined(CONFIG_MACH_MSM8X55_UNIVA_Q)
 /* LGE_CHANGE
   * For qt602240_ts bring up for Victor
   * 2011-01-25, guilbert.lee@lge.com
@@ -437,7 +437,7 @@ static const u8 init_vals_ver_22[] = {
 };
 #endif
 
-#ifdef CONFIG_MACH_MSM8X55_VICTOR
+#if defined(CONFIG_MACH_MSM8X55_VICTOR) || defined(CONFIG_MACH_MSM8X55_UNIVA_Q)
 enum Firm_Status_ID {
 	NO_FIRM_UP = 0,
 	UPDATE_FIRM_UP,
@@ -493,14 +493,14 @@ struct qt602240_data {
 	struct qt602240_info info;
 	struct qt602240_finger finger[QT602240_MAX_FINGER];
 	unsigned int irq;
-#ifdef CONFIG_MACH_MSM8X55_VICTOR
+#if defined(CONFIG_MACH_MSM8X55_VICTOR) || defined(CONFIG_MACH_MSM8X55_UNIVA_Q)
 #ifdef CONFIG_HAS_EARLYSUSPEND
 	struct early_suspend	early_suspend;
 #endif
 #endif
 };
 
-#ifdef CONFIG_MACH_MSM8X55_VICTOR
+#if defined(CONFIG_MACH_MSM8X55_VICTOR) || defined(CONFIG_MACH_MSM8X55_UNIVA_Q)
 #ifdef CONFIG_HAS_EARLYSUSPEND
 static void qt602240_early_suspend(struct early_suspend *);
 static void qt602240_late_resume(struct early_suspend *);
@@ -547,9 +547,9 @@ static bool qt602240_object_writable(unsigned int type)
 	case QT602240_PROCI_GRIPFACE:
 	case QT602240_PROCG_NOISE:
 	case QT602240_PROCI_ONETOUCH:
-#ifndef CONFIG_MACH_MSM8X55_VICTOR
+#if !defined(CONFIG_MACH_MSM8X55_VICTOR) && !defined(CONFIG_MACH_MSM8X55_UNIVA_Q)
 	case QT602240_PROCI_TWOTOUCH:
-#endif
+endif
 	case QT602240_SPT_GPIOPWM:
 	case QT602240_SPT_SELFTEST:
 	case QT602240_SPT_CTECONFIG:
@@ -564,7 +564,7 @@ static void qt602240_dump_message(struct device *dev,
 {
 	printk(KERN_INFO"reportid:\t0x%x\n", message->reportid);
 	printk(KERN_INFO"message1:\t0x%x\n", message->message[0]);
-#ifndef CONFIG_MACH_MSM8X55_VICTOR
+#if !defined(CONFIG_MACH_MSM8X55_VICTOR) && !defined(CONFIG_MACH_MSM8X55_UNIVA_Q)
 	printk(KERN_INFO"message2:\t0x%x\n", message->message[1]);
 	printk(KERN_INFO"message3:\t0x%x\n", message->message[2]);
 	printk(KERN_INFO"message4:\t0x%x\n", message->message[3]);
@@ -575,7 +575,7 @@ static void qt602240_dump_message(struct device *dev,
 #endif
 }
 
-#ifndef CONFIG_MACH_MSM8X55_VICTOR
+#if !defined(CONFIG_MACH_MSM8X55_VICTOR) && !defined(CONFIG_MACH_MSM8X55_UNIVA_Q)
 static int qt602240_check_bootloader(struct i2c_client *client,
 				     unsigned int state)
 {
@@ -771,7 +771,7 @@ static int qt602240_write_object(struct qt602240_data *data,
 	return qt602240_write_reg(data->client, reg + offset, val);
 }
 
-#ifdef CONFIG_MACH_MSM8X55_VICTOR
+#if defined(CONFIG_MACH_MSM8X55_VICTOR) || defined(CONFIG_MACH_MSM8X55_UNIVA_Q)
 static void reset_chip(struct qt602240_data *data)
 {
 	qt602240_write_object(data, QT602240_GEN_COMMAND,
@@ -1041,7 +1041,7 @@ static void qt602240_input_report(struct qt602240_data *data, int single_id)
 {
 	struct qt602240_finger *finger = data->finger;
 	struct input_dev *input_dev = data->input_dev;
-#ifndef CONFIG_MACH_MSM8X55_VICTOR
+#if !defined(CONFIG_MACH_MSM8X55_VICTOR) && !defined(CONFIG_MACH_MSM8X55_UNIVA_Q)
 	int status = finger[single_id].status;
 #endif
 	int finger_num;
@@ -1083,7 +1083,7 @@ static void qt602240_input_report(struct qt602240_data *data, int single_id)
 		input_report_key(input_dev, BTN_TOUCH, finger[id].area ? 1 : 0);
 		input_mt_sync(input_dev);
 	}
-#ifndef CONFIG_MACH_MSM8X55_VICTOR
+#if !defined(CONFIG_MACH_MSM8X55_VICTOR) && !defined(CONFIG_MACH_MSM8X55_UNIVA_Q)
 	input_report_key(input_dev, BTN_TOUCH, finger_num > 0);
 
 	if (status != QT602240_RELEASE) {
@@ -1139,7 +1139,7 @@ static void qt602240_input_touchevent(struct qt602240_data *data,
 		y = (message->message[2] << 2) | ((message->message[3] & ~0xf3) >> 2);
 		area = message->message[4];
 
-#ifndef CONFIG_MACH_MSM8X55_VICTOR
+#if !defined(CONFIG_MACH_MSM8X55_VICTOR) && !defined(CONFIG_MACH_MSM8X55_UNIVA_Q)
 		dev_dbg(dev, "[%d] %s x: %d, y: %d, area: %d\n", id,
 				status & QT602240_MOVE ? "moved" : "pressed",
 				x, y, area);
@@ -1219,7 +1219,7 @@ static irqreturn_t qt602240_interrupt(int irq, void *dev_id)
 		if (reportid >= min_reportid && reportid <= max_reportid) {
 			qt602240_input_touchevent(data, &message, id);
 
-#ifdef CONFIG_MACH_MSM8X55_VICTOR
+#if defined(CONFIG_MACH_MSM8X55_VICTOR) || defined(CONFIG_MACH_MSM8X55_UNIVA_Q)
 			/* PRESS or MOVE */
 			if ((message.message[0] & QT602240_DETECT))
 				touch_message_flag = 1;
@@ -1276,7 +1276,7 @@ static int qt602240_check_reg_init(struct qt602240_data *data)
 	case QT602240_VER_22:
 		init_vals = (u8 *)init_vals_ver_22;
 		break;
-#ifdef CONFIG_MACH_MSM8X55_VICTOR
+#if defined(CONFIG_MACH_MSM8X55_VICTOR) || defined(CONFIG_MACH_MSM8X55_UNIVA_Q)
 	case QT602240_VER_32:
 		init_vals = (u8 *)init_vals_ver_32;
 		break;
@@ -1304,7 +1304,7 @@ static int qt602240_check_reg_init(struct qt602240_data *data)
 
 static int qt602240_check_matrix_size(struct qt602240_data *data)
 {
-#ifndef CONFIG_MACH_MSM8X55_VICTOR
+#if !defined(CONFIG_MACH_MSM8X55_VICTOR) && !defined(CONFIG_MACH_MSM8X55_UNIVA_Q)
 	const struct qt602240_platform_data *pdata = data->pdata;
 	struct device *dev = &data->client->dev;
 	int mode = -1;
@@ -1373,7 +1373,7 @@ static int qt602240_check_matrix_size(struct qt602240_data *data)
 
 static int qt602240_make_highchg(struct qt602240_data *data)
 {
-#ifndef CONFIG_MACH_MSM8X55_VICTOR
+#if !defined(CONFIG_MACH_MSM8X55_VICTOR) && !defined(CONFIG_MACH_MSM8X55_UNIVA_Q)
 	struct device *dev = &data->client->dev;
 	int count = 10;
 	int error;
@@ -1400,7 +1400,7 @@ static void qt602240_handle_pdata(struct qt602240_data *data)
 	const struct qt602240_platform_data *pdata = data->pdata;
 	u8 voltage;
 
-#ifndef CONFIG_MACH_MSM8X55_VICTOR
+#if !defined(CONFIG_MACH_MSM8X55_VICTOR) && !defined(CONFIG_MACH_MSM8X55_UNIVA_Q)
 	/* Set touchscreen lines */
 	qt602240_write_object(data, QT602240_TOUCH_MULTI, QT602240_TOUCH_XSIZE,
 			pdata->x_line);
@@ -1626,7 +1626,7 @@ static ssize_t qt602240_object_show(struct device *dev,
 	return count;
 }
 
-#ifdef CONFIG_MACH_MSM8X55_VICTOR
+#if defined(CONFIG_MACH_MSM8X55_VICTOR) || defined(CONFIG_MACH_MSM8X55_UNIVA_Q)
 int qt602240_boot_read_mem(struct i2c_client *client, unsigned char *mem)
 {
 	struct i2c_msg rmsg;
@@ -1678,7 +1678,7 @@ static int qt602240_load_fw(struct device *dev, const char *fn)
 	else
 		client->addr = QT602240_BOOT_HIGH;
 
-#ifdef CONFIG_MACH_MSM8X55_VICTOR
+#if defined(CONFIG_MACH_MSM8X55_VICTOR) || defined(CONFIG_MACH_MSM8X55_UNIVA_Q)
 	{
 		unsigned char boot_status;
 		unsigned char boot_ver;
@@ -1848,7 +1848,7 @@ out:
 	return ret;
 }
 
-#ifdef CONFIG_MACH_MSM8X55_VICTOR
+#if defined(CONFIG_MACH_MSM8X55_VICTOR) || defined(CONFIG_MACH_MSM8X55_UNIVA_Q)
 static ssize_t qt602240_update_fw_show(struct device *dev,
 					struct device_attribute *attr, char *buf)
 {
@@ -1880,7 +1880,7 @@ static ssize_t qt602240_update_fw_store(struct device *dev,
 		return -EINVAL;
 	}
 
-#ifdef CONFIG_MACH_MSM8X55_VICTOR
+#if defined(CONFIG_MACH_MSM8X55_VICTOR) || defined(CONFIG_MACH_MSM8X55_UNIVA_Q)
 	printk(KERN_INFO"The firmware update Start!!\n");
 	firmware_status = UPDATE_FIRM_UP;
 #endif
@@ -1889,13 +1889,13 @@ static ssize_t qt602240_update_fw_store(struct device *dev,
 
 	error = qt602240_load_fw(dev, QT602240_FW_NAME);
 	if (error) {
-#ifdef CONFIG_MACH_MSM8X55_VICTOR
+#if defined(CONFIG_MACH_MSM8X55_VICTOR) || defined(CONFIG_MACH_MSM8X55_UNIVA_Q)
 		firmware_status = FAIL_FIRM_UP;
 #endif
 		dev_err(dev, "The firmware update failed(%d)\n", error);
 		count = error;
 	} else {
-#ifdef CONFIG_MACH_MSM8X55_VICTOR
+#if defined(CONFIG_MACH_MSM8X55_VICTOR) || defined(CONFIG_MACH_MSM8X55_UNIVA_Q)
 		firmware_status = SUCCESS_FIRM_UP;
 
 		printk(KERN_INFO"The firmware update succeeded!!\n");
@@ -1917,7 +1917,7 @@ static ssize_t qt602240_update_fw_store(struct device *dev,
 	return count;
 }
 
-#ifdef CONFIG_MACH_MSM8X55_VICTOR
+#if defined(CONFIG_MACH_MSM8X55_VICTOR) || defined(CONFIG_MACH_MSM8X55_UNIVA_Q)
 static ssize_t qt602240_firm_status_show(struct device *dev,
 					struct device_attribute *attr, char *buf)
 {
@@ -1926,7 +1926,7 @@ static ssize_t qt602240_firm_status_show(struct device *dev,
 #endif
 
 static DEVICE_ATTR(object, 0444, qt602240_object_show, NULL);
-#ifdef CONFIG_MACH_MSM8X55_VICTOR
+#if defined(CONFIG_MACH_MSM8X55_VICTOR) || defined(CONFIG_MACH_MSM8X55_UNIVA_Q)
 	static DEVICE_ATTR(firm_status, S_IRUGO | S_IWUSR | S_IXOTH, qt602240_firm_status_show, NULL);
 	static DEVICE_ATTR(update_fw, 0664, qt602240_update_fw_show, qt602240_update_fw_store);
 #else
@@ -1948,13 +1948,13 @@ static void qt602240_start(struct qt602240_data *data)
 {
 	/* Touch enable */
 	qt602240_write_object(data,
-#ifdef CONFIG_MACH_MSM8X55_VICTOR
+#if defined(CONFIG_MACH_MSM8X55_VICTOR) || defined(CONFIG_MACH_MSM8X55_UNIVA_Q)
 			QT602240_TOUCH_MULTI, QT602240_TOUCH_CTRL, 0x8F);
 #else
 			QT602240_TOUCH_MULTI, QT602240_TOUCH_CTRL, 0x83);
 #endif
 
-#ifdef CONFIG_MACH_MSM8X55_VICTOR
+#if defined(CONFIG_MACH_MSM8X55_VICTOR) || defined(CONFIG_MACH_MSM8X55_UNIVA_Q)
 	qt602240_write_object(data,
 			QT602240_GEN_POWER, QT602240_POWER_IDLEACQINT, 0x40);
 
@@ -1968,7 +1968,7 @@ static void qt602240_start(struct qt602240_data *data)
 
 static void qt602240_stop(struct qt602240_data *data)
 {
-#ifdef CONFIG_MACH_MSM8X55_VICTOR
+#if defined(CONFIG_MACH_MSM8X55_VICTOR) || defined(CONFIG_MACH_MSM8X55_UNIVA_Q)
 	qt602240_write_object(data,
 			QT602240_GEN_POWER, QT602240_POWER_IDLEACQINT, 0);
 
@@ -2017,7 +2017,7 @@ static int __devinit qt602240_probe(struct i2c_client *client,
 		goto err_free_mem;
 	}
 
-#ifdef CONFIG_MACH_MSM8X55_VICTOR
+#if defined(CONFIG_MACH_MSM8X55_VICTOR) || defined(CONFIG_MACH_MSM8X55_UNIVA_Q)
 	qt_time_point = 0;
 #endif
 
@@ -2056,7 +2056,7 @@ static int __devinit qt602240_probe(struct i2c_client *client,
 	data->pdata = client->dev.platform_data;
 	data->irq = client->irq;
 
-#ifdef CONFIG_MACH_MSM8X55_VICTOR
+#if defined(CONFIG_MACH_MSM8X55_VICTOR) || defined(CONFIG_MACH_MSM8X55_UNIVA_Q)
 	/* int GPIO Config */
 	gpio_tlmm_config(GPIO_CFG(data->pdata->gpio_int, 0, GPIO_CFG_INPUT,
 				GPIO_CFG_NO_PULL, GPIO_CFG_2MA), GPIO_CFG_ENABLE);
@@ -2071,7 +2071,7 @@ static int __devinit qt602240_probe(struct i2c_client *client,
 		goto err_free_object;
 
 
-#ifdef CONFIG_MACH_MSM8X55_VICTOR
+#if defined(CONFIG_MACH_MSM8X55_VICTOR) || defined(CONFIG_MACH_MSM8X55_UNIVA_Q)
 	/* Set int GPIO Direction */
 	gpio_request(data->pdata->gpio_int, "qt602240_interrupt");
 	error = gpio_direction_input(data->pdata->gpio_int);
@@ -2095,13 +2095,13 @@ static int __devinit qt602240_probe(struct i2c_client *client,
 	if (error)
 		goto err_unregister_device;
 
-#ifdef CONFIG_MACH_MSM8X55_VICTOR
+#if defined(CONFIG_MACH_MSM8X55_VICTOR) || defined(CONFIG_MACH_MSM8X55_UNIVA_Q)
 	firmware_status = NO_FIRM_UP;
 	esd_check = 0;
 	qt_time_point = jiffies_to_msecs(jiffies);
 #endif
 
-#ifdef CONFIG_MACH_MSM8X55_VICTOR
+#if defined(CONFIG_MACH_MSM8X55_VICTOR) || defined(CONFIG_MACH_MSM8X55_UNIVA_Q)
 #ifdef CONFIG_HAS_EARLYSUSPEND
 	data->early_suspend.level = EARLY_SUSPEND_LEVEL_BLANK_SCREEN + 1;
 	data->early_suspend.suspend = qt602240_early_suspend;
@@ -2129,7 +2129,7 @@ static int __devexit qt602240_remove(struct i2c_client *client)
 {
 	struct qt602240_data *data = i2c_get_clientdata(client);
 
-#ifdef CONFIG_MACH_MSM8X55_VICTOR
+#if defined(CONFIG_MACH_MSM8X55_VICTOR) || defined(CONFIG_MACH_MSM8X55_UNIVA_Q)
 #ifdef CONFIG_HAS_EARLYSUSPEND
 	unregister_early_suspend(&data->early_suspend);
 #endif	/* CONFIG_HAS_EARLYSUSPEND */
@@ -2144,7 +2144,7 @@ static int __devexit qt602240_remove(struct i2c_client *client)
 	return 0;
 }
 
-#ifdef CONFIG_MACH_MSM8X55_VICTOR
+#if defined(CONFIG_MACH_MSM8X55_VICTOR) || defined(CONFIG_MACH_MSM8X55_UNIVA_Q)
 static void qt602240_power_down(struct qt602240_data *data)
 {
 	disable_irq_nosync(data->client->irq);
@@ -2177,7 +2177,7 @@ static void qt602240_power_up(struct qt602240_data *data)
 #endif
 
 #ifdef CONFIG_PM
-#ifdef CONFIG_MACH_MSM8X55_VICTOR
+#if defined(CONFIG_MACH_MSM8X55_VICTOR) || defined(CONFIG_MACH_MSM8X55_UNIVA_Q)
 static int qt602240_suspend(struct i2c_client *client)
 #else
 static int qt602240_suspend(struct i2c_client *client, pm_message_t mesg)
@@ -2209,7 +2209,7 @@ static int qt602240_resume(struct i2c_client *client)
 	}
 
 	msleep(100);
-#ifndef CONFIG_MACH_MSM8X55_VICTOR
+#if !defined(CONFIG_MACH_MSM8X55_VICTOR) && !defined(CONFIG_MACH_MSM8X55_UNIVA_Q)
 	qt602240_write_object(data, QT602240_GEN_COMMAND,
 			QT602240_COMMAND_RESET, 1);
 
@@ -2251,12 +2251,12 @@ static void qt602240_early_suspend(struct early_suspend *h)
 	
 	qt602240_input_report_release_flush(data);
 
-#ifdef CONFIG_MACH_MSM8X55_VICTOR
+#if defined(CONFIG_MACH_MSM8X55_VICTOR) || defined(CONFIG_MACH_MSM8X55_UNIVA_Q)
 	if(firmware_status != UPDATE_FIRM_UP)
 #endif
 	{
 		qt602240_suspend(data->client);
-#ifdef CONFIG_MACH_MSM8X55_VICTOR
+#if defined(CONFIG_MACH_MSM8X55_VICTOR) || defined(CONFIG_MACH_MSM8X55_UNIVA_Q)
 		qt602240_power_down(data);
 		qt_timer_state = 0;
 #endif
@@ -2272,11 +2272,11 @@ static void qt602240_late_resume(struct early_suspend *h)
 
 	printk(KERN_INFO"[TSP] qt602240_late_resume --- \n");
 	bWasSuspended = false;
-#ifdef CONFIG_MACH_MSM8X55_VICTOR
+#if defined(CONFIG_MACH_MSM8X55_VICTOR) || defined(CONFIG_MACH_MSM8X55_UNIVA_Q)
 	if(firmware_status != UPDATE_FIRM_UP)
 #endif
 	{
-#ifdef CONFIG_MACH_MSM8X55_VICTOR
+#if defined(CONFIG_MACH_MSM8X55_VICTOR) || defined(CONFIG_MACH_MSM8X55_UNIVA_Q)
 		qt602240_power_up(data);
 		qt602240_cal_check = 1;
 #endif
@@ -2299,7 +2299,7 @@ static struct i2c_driver qt602240_driver = {
 	},
 	.probe		= qt602240_probe,
 	.remove		= __devexit_p(qt602240_remove),
-#ifdef CONFIG_MACH_MSM8X55_VICTOR
+#if defined(CONFIG_MACH_MSM8X55_VICTOR) || defined(CONFIG_MACH_MSM8X55_UNIVA_Q)
 #ifndef CONFIG_HAS_EARLYSUSPEND
 	.suspend	= qt602240_suspend,
 	.resume		= qt602240_resume,

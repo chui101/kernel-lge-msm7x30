@@ -630,8 +630,7 @@ static struct resource resources_sdc2[] = {
 		.flags	= IORESOURCE_IRQ,
 	},
 	{
-/* LGE_CHANGE, change dma channel for emmc, munyoung.hwang@lge.com */
-#ifdef CONFIG_MACH_MSM8X55_VICTOR
+#if defined(LGE_MODEL_C729) || defined(LGE_MODEL_C800) || defined(CONFIG_MACH_MSM8X55_VICTOR)
 		.start	= 7,
 		.end	= 7,
 #else
@@ -799,20 +798,40 @@ static struct resource msm_mddi_ext_resources[] = {
 static struct resource msm_ebi2_lcd_resources[] = {
 	{
 		.name   = "base",
+//[sumeet.gupta 040411 ONE_CODE
+//#ifdef CONFIG_MACH_LGE_FLIP
+#ifdef LGE_MODEL_C729
+		.start  = 0xa0000000,
+		.end    = 0xa0000000 + PAGE_SIZE - 1,
+#else
 		.start  = 0xa0d00000,
 		.end    = 0xa0d00000 + PAGE_SIZE - 1,
+#endif
 		.flags  = IORESOURCE_MEM,
 	},
 	{
 		.name   = "lcd01",
+//#ifdef CONFIG_MACH_LGE_FLIP
+#ifdef LGE_MODEL_C729
+		.start  = 0x8C000000,
+		.end    = 0x8C000000 + 0x80000 - 1,
+#else
 		.start  = 0x98000000,
 		.end    = 0x98000000 + 0x80000 - 1,
+#endif
 		.flags  = IORESOURCE_MEM,
 	},
 	{
 		.name   = "lcd02",
+//#ifdef CONFIG_MACH_LGE_FLIP
+#ifdef LGE_MODEL_C729
+		.start  = 0x8d000000,
+		.end    = 0x8d000000 + 0x80000 - 1,
+#else
 		.start  = 0x9c000000,
 		.end    = 0x9c000000 + 0x80000 - 1,
+#endif
+//]sumeet.gupta 040411 ONE_CODE
 		.flags  = IORESOURCE_MEM,
 	},
 };

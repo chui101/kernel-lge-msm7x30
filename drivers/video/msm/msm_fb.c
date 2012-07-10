@@ -1354,14 +1354,17 @@ static int msm_fb_release(struct fb_info *info, int user)
 
 	mfd->ref_cnt--;
 
-	if (!mfd->ref_cnt) {
-		if ((ret =
-		     msm_fb_blank_sub(FB_BLANK_POWERDOWN, info,
-				      mfd->op_enable)) != 0) {
-			printk(KERN_ERR "msm_fb_release: can't turn off display!\n");
-			return ret;
-		}
-	}
+#if defined(CONFIG_MACH_MSM8X55_VICTOR) || defined(CONFIG_MACH_MSM8X55_UNIVA_Q) || defined(CONFIG_MACH_MSM8X55_FLIP)
+#else
+        if (!mfd->ref_cnt) {
+                if ((ret =
+                     msm_fb_blank_sub(FB_BLANK_POWERDOWN, info,
+                                      mfd->op_enable)) != 0) {
+                        printk(KERN_ERR "msm_fb_release: can't turn off display!\n");
+                        return ret;
+                }
+        }
+#endif
 
 	pm_runtime_put(info->dev);
 	return ret;
@@ -1598,7 +1601,7 @@ static int msm_fb_set_par(struct fb_info *info)
 	mfd->fbi->fix.line_length = msm_fb_line_length(mfd->index, var->xres,
 						       var->bits_per_pixel/8);
 
-#ifdef CONFIG_MACH_MSM8X55_VICTOR
+#if defined(CONFIG_MACH_MSM8X55_VICTOR) || defined(CONFIG_MACH_MSM8X55_UNIVA_Q)
 	/* LGE_CHANGE
 	 *  to avoid the display off in boot time
 	 *  2011-03-14 cheongil.hyun@lge.com

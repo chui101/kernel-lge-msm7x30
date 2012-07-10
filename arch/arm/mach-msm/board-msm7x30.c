@@ -4076,8 +4076,6 @@ static struct platform_device android_pmem_audio_device = {
        .dev = { .platform_data = &android_pmem_audio_pdata },
 };
 
-<<<<<<< HEAD
-<<<<<<< HEAD
 static struct kgsl_platform_data kgsl_pdata = {
 #ifdef CONFIG_MSM_NPA_SYSTEM_BUS
 	/* NPA Flow IDs */
@@ -4097,130 +4095,63 @@ static struct kgsl_platform_data kgsl_pdata = {
 	.imem_clk_name = "imem_clk",
 	.grp3d_clk_name = "grp_clk",
 	.grp3d_pclk_name = "grp_pclk",
-=======
-static struct kgsl_core_platform_data kgsl_core_pdata = {
-	.imem_clk_name = {
-		.clk = "imem_clk",
-		.pclk = NULL,
-	},
+#ifdef CONFIG_MSM_KGSL_2D
+	.grp2d0_clk_name = "grp_2d_clk",
+	.grp2d0_pclk_name = "grp_2d_pclk",
+#else
+	.grp2d0_clk_name = NULL,
+#endif
+	.idle_timeout_3d = HZ/20,
+	.idle_timeout_2d = HZ/10,
+	.nap_allowed = true,
 
-	.pt_va_base = 0x66000000,
 #ifdef CONFIG_KGSL_PER_PROCESS_PAGE_TABLE
 	.pt_va_size = SZ_32M,
+	/* Maximum of 32 concurrent processes */
+	.pt_max_count = 32,
 #else
 	.pt_va_size = SZ_128M,
+	/* We only ever have one pagetable for everybody */
+	.pt_max_count = 1,
 #endif
-=======
-static struct resource kgsl_3d0_resources[] = {
+};
+
+static struct resource kgsl_resources[] = {
 	{
-		.name  = KGSL_3D0_REG_MEMORY,
+		.name = "kgsl_reg_memory",
 		.start = 0xA3500000, /* 3D GRP address */
 		.end = 0xA351ffff,
 		.flags = IORESOURCE_MEM,
 	},
 	{
-		.name = KGSL_3D0_IRQ,
+		.name = "kgsl_yamato_irq",
 		.start = INT_GRP_3D,
 		.end = INT_GRP_3D,
 		.flags = IORESOURCE_IRQ,
 	},
->>>>>>> 2dacbf9... msm: kgsl: Separate KGSL into individual 2D and 3D devices
-};
-
-static struct kgsl_device_platform_data kgsl_3d0_pdata = {
-	.pwr_data = {
-		.pwrlevel = {
-			{
-				.gpu_freq = 245760000,
-				.bus_freq = 192000000,
-			},
-			{
-				.gpu_freq = 192000000,
-				.bus_freq = 153000000,
-			},
-			{
-				.gpu_freq = 192000000,
-				.bus_freq = 0,
-			},
-		},
-		.init_level = 0,
-		.num_levels = 3,
-		.set_grp_async = set_grp3d_async,
-		.idle_timeout = HZ/20,
-		.nap_allowed = true,
-	},
-	.clk = {
-		.name = {
-			.clk = "grp_clk",
-			.pclk = "grp_pclk",
-		},
-	},
-};
-
-static struct platform_device msm_kgsl_3d0 = {
-	.name = "kgsl-3d0",
-	.id = 0,
-	.num_resources = ARRAY_SIZE(kgsl_3d0_resources),
-	.resource = kgsl_3d0_resources,
-	.dev = {
-		.platform_data = &kgsl_3d0_pdata,
-	},
-};
-
-#ifdef CONFIG_MSM_KGSL_2D
-static struct resource kgsl_2d0_resources[] = {
 	{
-		.name = KGSL_2D0_REG_MEMORY,
+		.name = "kgsl_2d0_reg_memory",
 		.start = 0xA3900000, /* Z180 base address */
 		.end = 0xA3900FFF,
 		.flags = IORESOURCE_MEM,
 	},
 	{
-		.name = KGSL_2D0_IRQ,
+		.name  = "kgsl_2d0_irq",
 		.start = INT_GRP_2D,
 		.end = INT_GRP_2D,
 		.flags = IORESOURCE_IRQ,
 	},
 };
 
-static struct kgsl_device_platform_data kgsl_2d0_pdata = {
-	.pwr_data = {
-		.pwrlevel = {
-			{
-				.gpu_freq = 0,
-				.bus_freq = 192000000,
-			},
-		},
-		.init_level = 0,
-		.num_levels = 1,
-		/* HW workaround, run Z180 SYNC @ 192 MHZ */
-		.set_grp_async = NULL,
-		.idle_timeout = HZ/10,
-		.nap_allowed = true,
-	},
-	.clk = {
-		.name = {
-<<<<<<< HEAD
->>>>>>> 2fddee1... msm: kgsl: platform_data restructure for 2D/3D devices
-#ifdef CONFIG_MSM_KGSL_2D
-=======
->>>>>>> 2dacbf9... msm: kgsl: Separate KGSL into individual 2D and 3D devices
-			.clk = "grp_2d_clk",
-			.pclk = "grp_2d_pclk",
-		},
-	},
-};
-
-static struct platform_device msm_kgsl_2d0 = {
-	.name = "kgsl-2d0",
-	.id = 0,
-	.num_resources = ARRAY_SIZE(kgsl_2d0_resources),
-	.resource = kgsl_2d0_resources,
+static struct platform_device msm_device_kgsl = {
+	.name = "kgsl",
+	.id = -1,
+	.num_resources = ARRAY_SIZE(kgsl_resources),
+	.resource = kgsl_resources,
 	.dev = {
-		.platform_data = &kgsl_2d0_pdata,
+		.platform_data = &kgsl_pdata,
 	},
 };
-#endif
 
 #if defined(CONFIG_CRYPTO_DEV_QCRYPTO) || \
 		defined(CONFIG_CRYPTO_DEV_QCRYPTO_MODULE) || \
@@ -5557,9 +5488,6 @@ static struct platform_device *devices[] __initdata = {
 #ifdef CONFIG_USB_ANDROID_DIAG
 	&usb_diag_device,
 #endif
-#ifdef CONFIG_USB_F_SERIAL
-	&usb_gadget_fserial_device,
-#endif
 	&android_usb_device,
 #endif
 	&qsd_device_spi,
@@ -5595,10 +5523,7 @@ static struct platform_device *devices[] __initdata = {
    (defined(CONFIG_MSM_BT_POWER) || defined(CONFIG_MSM_BT_POWER_MODULE))
 	&msm_bt_power_device,
 #endif
-	&msm_kgsl_3d0,
-#ifdef CONFIG_MSM_KGSL_2D
-	&msm_kgsl_2d0,
-#endif
+	&msm_device_kgsl,
 #ifdef CONFIG_MT9T013
 	&msm_camera_sensor_mt9t013,
 #endif
