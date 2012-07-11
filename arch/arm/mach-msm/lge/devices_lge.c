@@ -266,6 +266,23 @@ static struct platform_device *pmem_devices[] __initdata = {
 	&android_pmem_audio_device,
 };
 
+static struct kgsl_core_platform_data kgsl_core_pdata = {
+        .imem_clk_name = {
+                .clk = "imem_clk",
+                .pclk = NULL,
+        },
+
+#ifdef CONFIG_KGSL_PER_PROCESS_PAGE_TABLE
+        .pt_va_size = SZ_32M,
+        /* Maximum of 32 concurrent processes */
+        .pt_max_count = 32,
+#else
+        .pt_va_size = SZ_128M,
+        /* We only ever have one pagetable for everybody */
+        .pt_max_count = 1,
+#endif
+};
+
 static struct resource kgsl_3d0_resources[] = {
 	{
 		.name  = KGSL_3D0_REG_MEMORY,
