@@ -130,9 +130,9 @@ struct kgsl_version {
 #define KGSL_2D1_IRQ		"kgsl_2d1_irq"
 
 struct kgsl_core_platform_data = {
-        struct kgsl_grp_clk_name imem_clk_name,
-        unsigned int pt_va_size = SZ_32M,
-        unsigned int pt_max_count = 32,
+        struct kgsl_grp_clk_name imem_clk_name;
+        unsigned int pt_va_size;
+        unsigned int pt_max_count;
 };
 
 struct kgsl_grp_clk_name {
