@@ -4082,16 +4082,19 @@ static struct kgsl_core_platform_data kgsl_core_pdata = {
 		.pclk = NULL,
 	},
 
-	.pt_va_base = 0x66000000,
 #ifdef CONFIG_KGSL_PER_PROCESS_PAGE_TABLE
 	.pt_va_size = SZ_32M,
+	/* Maximum of 32 concurrent processes */
+	.pt_max_count = 32,
 #else
 	.pt_va_size = SZ_128M,
+	/* We only ever have one pagetable for everybody */
+	.pt_max_count = 1,
 #endif
 };
 static struct resource kgsl_3d0_resources[] = {
 	{
-		.name  = KGSL_3D0_REG_MEMORY,
+		.name = KGSL_REG_MEMORY,
 		.start = 0xA3500000, /* 3D GRP address */
 		.end = 0xA351ffff,
 		.flags = IORESOURCE_MEM,
@@ -4153,7 +4156,7 @@ static struct resource kgsl_2d0_resources[] = {
 		.flags = IORESOURCE_MEM,
 	},
 	{
-		.name = KGSL_2D0_IRQ,
+		.name  = KGSL_2D0_IRQ,
 		.start = INT_GRP_2D,
 		.end = INT_GRP_2D,
 		.flags = IORESOURCE_IRQ,
@@ -4192,7 +4195,6 @@ static struct platform_device msm_kgsl_2d0 = {
 		.platform_data = &kgsl_2d0_pdata,
 	},
 };
-#endif
 
 #if defined(CONFIG_CRYPTO_DEV_QCRYPTO) || \
 		defined(CONFIG_CRYPTO_DEV_QCRYPTO_MODULE) || \
@@ -5529,9 +5531,6 @@ static struct platform_device *devices[] __initdata = {
 #ifdef CONFIG_USB_ANDROID_DIAG
 	&usb_diag_device,
 #endif
-#ifdef CONFIG_USB_F_SERIAL
-	&usb_gadget_fserial_device,
-#endif
 	&android_usb_device,
 #endif
 	&qsd_device_spi,
@@ -5567,10 +5566,7 @@ static struct platform_device *devices[] __initdata = {
    (defined(CONFIG_MSM_BT_POWER) || defined(CONFIG_MSM_BT_POWER_MODULE))
 	&msm_bt_power_device,
 #endif
-	&msm_kgsl_3d0,
-#ifdef CONFIG_MSM_KGSL_2D
-	&msm_kgsl_2d0,
-#endif
+	&msm_device_kgsl,
 #ifdef CONFIG_MT9T013
 	&msm_camera_sensor_mt9t013,
 #endif

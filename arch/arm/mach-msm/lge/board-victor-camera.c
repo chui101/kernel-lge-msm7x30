@@ -135,6 +135,11 @@ static struct i2c_board_info camera_i2c_devices[] = {
 	I2C_BOARD_INFO("mt9v113", CAM_VGA_I2C_SLAVE_ADDR),
     },
 #endif
+#ifdef CONFIG_LM2759_FLASH
+        [1] = {
+                I2C_BOARD_INFO("lm2759", CAM_FLASH_I2C_SLAVE_ADDR),
+        },
+#endif
 };
 
 

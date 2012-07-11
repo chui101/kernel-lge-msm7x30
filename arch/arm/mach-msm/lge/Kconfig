@@ -13,6 +13,14 @@ config MACH_MSM8X55_VICTOR
 	help
 	  Support for the LGE MSM8x55 VICTOR board.
 
+config MACH_MSM8X55_UNIVA_Q
+        depends on ARCH_MSM7X30
+        depends on !MSM_STACKED_MEMORY
+        select MACH_LGE
+        bool "MSM8x55 UNIVA_Q"
+        help
+          Support for the LGE MSM8x55 UNIVA_Q board.
+
 endmenu
 
 config LGE_DOMESTIC

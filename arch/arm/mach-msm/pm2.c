@@ -1782,9 +1782,9 @@ void msm_pm_flush_console(void)
 	local_irq_enable();
 }
 
+#endif
 /* spin lock for power sequence */
 DEFINE_SPINLOCK(power_lock);
-#endif
 
 static void msm_pm_power_off(void)
 {

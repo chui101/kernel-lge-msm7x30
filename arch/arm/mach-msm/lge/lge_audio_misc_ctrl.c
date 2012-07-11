@@ -25,7 +25,7 @@
 #include <linux/string.h>
 #include <linux/ctype.h>
 #include <linux/limits.h>
-//#include <mach/qdsp5v2/lge_tpa2055-amp.h>
+#include <mach/qdsp5v2/lge_tpa2055-amp.h>
 #include <mach/qdsp5v2/audio_dev_ctl.h>
 
 /*RPC versions*/
@@ -76,7 +76,7 @@ struct snd_set_loopback_mode_msg {
 };
 struct snd_set_loopback_mode_msg lmsg;
 
-#ifdef CONFIG_LGE_MODEL_E739
+#if defined(CONFIG_LGE_MODEL_E739) || defined(CONFIG_LGE_MODEL_C800)
 /*******************************************************************************
 *	Function Name :  audio_misc_driver_test
 *	Args : test function ID.
@@ -108,7 +108,7 @@ extern struct snddev_icodec_data headset_mono_voice_rx_data;
 extern struct snddev_icodec_data speaker_stereo_voice_rx_data;
 extern struct snddev_ecodec_data bt_sco_voice_rx_data;
 
-#ifdef CONFIG_LGE_MODEL_E739
+#if defined(CONFIG_LGE_MODEL_E739) || defined(CONFIG_LGE_MODEL_C800)
 bool bTTY_Headset = false;
 #endif
 
@@ -545,7 +545,7 @@ static long audio_misc_ioctl(struct file *file, unsigned int cmd, unsigned long 
 	{
 
         case SET_AUDIO_CAL:
-#ifdef CONFIG_LGE_MODEL_E739
+#if defined(CONFIG_LGE_MODEL_E739) || defined(CONFIG_LGE_MODEL_C800)
 		  if (copy_from_user(&lb_path,(void *)arg,sizeof(int)))
 			  return 0;
 		  MM_INFO("ioctl arg = %d\n", lb_path);

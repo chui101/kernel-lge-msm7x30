@@ -6,6 +6,9 @@ else ifeq ($(CONFIG_MARIMBA_CODEC), y)
 obj-y += snddev_icodec.o
 endif
 
+ifeq ($(CONFIG_MACH_MSM8X55_UNIVA_Q), y)
+obj-y += snddev_data_QTR8615_C800.o
+else 
 ifeq ($(CONFIG_LGE_MODEL_E739), y)
 obj-y += snddev_data_QTR8615_e739.o
 else
@@ -13,6 +16,7 @@ ifeq ($(CONFIG_MACH_MSM8X55_VICTOR), y)
 obj-y += snddev_data_marimba_victor.o
 else ifeq ($(CONFIG_MARIMBA_CODEC), y)
 obj-y += snddev_data_marimba.o
+endif
 endif
 endif
 obj-$(CONFIG_TIMPANI_CODEC) += snddev_data_timpani.o
@@ -31,6 +35,7 @@ obj-y += audio_mvs.o
 ifeq ($(CONFIG_LGE_MODEL_E739), y)
 obj-y += lge_wm9093_e739.o
 else
+obj-$(CONFIG_MACH_MSM8X55_UNIVA_Q) += lge_tpa2055-amp_C800.o
 obj-$(CONFIG_MACH_MSM8X55_VICTOR) += lge_audio_amp.o
 obj-$(CONFIG_MACH_MSM8X55_VICTOR) += lge_amp_wm9093.o
 obj-$(CONFIG_MACH_MSM8X55_VICTOR) += lge_amp_tpa2055.o

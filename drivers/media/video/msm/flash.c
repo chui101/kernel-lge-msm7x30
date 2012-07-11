@@ -359,6 +359,42 @@ int msm_camera_flash_pmic(
 	return rc;
 }
 
+#ifdef CONFIG_LM2759_FLASH
+
+int lm2759_flash_set_led_state(unsigned led_state);
+
+int msm_camera_flash_lm2759(unsigned led_state)
+{
+        int rc = 0;
+
+        switch (led_state) {
+        case MSM_CAMERA_LED_OFF:
+                rc = lm2759_flash_set_led_state(0);
+                break;
+
+        case MSM_CAMERA_LED_LOW:
+                rc = lm2759_flash_set_led_state(4);
+                break;
+
+        case MSM_CAMERA_LED_HIGH:
+                rc = lm2759_flash_set_led_state(2);
+                break;
+
+        case MSM_CAMERA_LED_TORCH:
+                rc = lm2759_flash_set_led_state(4);
+                break;
+        default:
+                rc = -EFAULT;
+                break;
+        }
+
+        CDBG("flash_set_led_state: return %d\n", rc);
+
+        return rc;
+}
+
+#endif  /* CONFIG_LM2759_FLASH */
+
 int32_t msm_camera_flash_set_led_state(
 	struct msm_camera_sensor_flash_data *fdata, unsigned led_state)
 {
@@ -374,8 +410,12 @@ int32_t msm_camera_flash_set_led_state(
 
 	switch (fdata->flash_src->flash_sr_type) {
 	case MSM_CAMERA_FLASH_SRC_PMIC:
-		rc = msm_camera_flash_pmic(&fdata->flash_src->_fsrc.pmic_src,
-			led_state);
+#ifdef CONFIG_LM2759_FLASH
+                rc = msm_camera_flash_lm2759(led_state);
+#else
+                rc = msm_camera_flash_pmic(&fdata->flash_src->_fsrc.pmic_src,
+                        led_state);
+#endif
 		break;
 
 	case MSM_CAMERA_FLASH_SRC_PWM:

@@ -13,6 +13,18 @@ obj-$(CONFIG_MACH_MSM8X55_VICTOR) += board-victor-bt.o
 obj-$(CONFIG_MACH_MSM8X55_VICTOR) += board-victor-camera.o
 obj-$(CONFIG_MACH_LGE) += devices_lge.o
 
+obj-$(CONFIG_MACH_MSM8X55_UNIVA_Q) += board-univaq.o
+obj-$(CONFIG_MACH_MSM8X55_UNIVA_Q) += board-univaq-pm.o
+obj-$(CONFIG_MACH_MSM8X55_UNIVA_Q) += board-univaq-sound.o
+obj-$(CONFIG_MACH_MSM8X55_UNIVA_Q) += board-univaq-misc.o
+obj-$(CONFIG_MACH_MSM8X55_UNIVA_Q) += board-univaq-mmc.o
+obj-$(CONFIG_MACH_MSM8X55_UNIVA_Q) += board-univaq-input.o
+obj-$(CONFIG_MACH_MSM8X55_UNIVA_Q) += lge_audio_misc_ctrl.o
+obj-$(CONFIG_MACH_MSM8X55_UNIVA_Q) += board-univaq-panel.o
+
+obj-$(CONFIG_MACH_MSM8X55_UNIVA_Q) += board-univaq-bt.o
+obj-$(CONFIG_MACH_MSM8X55_UNIVA_Q) += board-univaq-camera.o
+
 obj-$(CONFIG_LGE_HEADSET_MAX14579) += lge_headset_MAX14579.o
 obj-$(CONFIG_LGE_PROC_COMM) += lge_proc_comm.o
 obj-$(CONFIG_LGE_PROC_COMM) += lge_ftm.o

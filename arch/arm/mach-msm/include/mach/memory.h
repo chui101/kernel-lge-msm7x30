@@ -35,7 +35,7 @@
 #define EBI0_PAGE_OFFSET PAGE_OFFSET
 #define EBI0_SIZE 0x10000000
 
-#ifdef CONFIG_MACH_MSM8X55_VICTOR
+#if defined(CONFIG_MACH_MSM8X55_VICTOR) || defined(CONFIG_MACH_MSM8X55_UNIVA_Q)
 /* memory of victor is separated to three region.
  * 	first is 0x20000000 ~ 0x03e00000
  * 	second is 0x07a00000 ~ 0x10000000
