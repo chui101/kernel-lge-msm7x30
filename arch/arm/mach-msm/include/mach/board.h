@@ -354,6 +354,29 @@ struct isp1763_platform_data {
 	int (*setup_gpio)(int enable);
 };
 #endif
+
+
+/* LCD Backlight */
+struct backlight_platform_data {
+        void (*platform_init)(void);
+        int gpio;
+        unsigned int mode;                   /* initial mode */
+        int max_current;                         /* led max current(0-7F) */
+        int init_on_boot;                        /* flag which initialize on system boot */
+        int version;                             /* Chip version number */
+};
+
+/* LCD panel */
+struct msm_panel_lgit_pdata {
+        int gpio;
+        int (*backlight_level)(int level, int max, int min);
+        int (*pmic_backlight)(int level);
+        int (*panel_num)(void);
+        void (*panel_config_gpio)(int);
+        int *gpio_num;
+        int initialized;
+};
+
 /* common init routines for use by arch/arm/mach-msm/board-*.c */
 
 void __init msm_add_devices(void);

@@ -30,6 +30,7 @@
 #define __MACH_QDSP5_V2_SNDDEV_ECODEC_H
 #include <mach/qdsp5v2/audio_def.h>
 
+#include <mach/pmic.h>
 struct snddev_ecodec_data {
 	u32 capability; /* RX or TX */
 	const char *name;
@@ -42,9 +43,7 @@ struct snddev_ecodec_data {
 	s32 max_voice_rx_vol[VOC_RX_VOL_ARRAY_NUM]; /* [0]:NB, [1]:WB */
 	s32 min_voice_rx_vol[VOC_RX_VOL_ARRAY_NUM];
 
-#if defined(CONFIG_LGE_MODEL_E739)
 	enum hsed_controller *pmctl_id; /* tx only enable mic bias */
 	u32 pmctl_id_sz;
-#endif
 };
 #endif

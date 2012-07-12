@@ -124,7 +124,7 @@ static struct display_table mddi_auo_display_off[] = {
 
 static struct display_table mddi_auo_init_on[] = {
 
-#if defined (LGE_MODEL_C800)
+#if defined (CONFIG_LGE_MODEL_C800)
 #if 1			//LH350H05-SD02 (2011.04.06)
 	{REGFLAG_DELAY, 10, {0}},
 

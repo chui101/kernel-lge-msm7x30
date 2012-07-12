@@ -176,6 +176,15 @@ struct ecom_platform_data {
 	s16 *a_layout;
 };
 
+/* lge vibrator platform data */
+struct lge_vibrator_platform_data {
+	int enable_status;
+	int (*power_set)(int enable); 		/* LDO Power Set Function */
+	int (*pwm_set)(int enable, int gain); 		/* PWM Set Function */
+	int (*ic_enable_set)(int enable); 	/* Motor IC Set Function */
+	int amp_value;				/* PWM tuning value */
+};
+
 /* android vibrator platform data */
 struct android_vibrator_platform_data {
 	int enable_status;
@@ -206,9 +215,7 @@ void __init msm_add_kgsl_device(void);
 void __init msm7x30_allocate_memory_regions(void);
 void __init msm_add_usb_devices(void);
 void __init msm7x30_init_marimba(void);
-#if defined(CONFIG_LGE_MODEL_E739)
 void __init register_board_info(void);
-#endif
 
 /* implement in board-victor-pm.c */
 int __init pmic8058_buses_init(void);
@@ -272,5 +279,5 @@ unsigned int lge_get_fb_phys_addr(void);
 #endif
 
 int board_is_rev(char *);
-
+int lge_get_hw_rev(void);
 #endif

@@ -630,7 +630,7 @@ static struct resource resources_sdc2[] = {
 		.flags	= IORESOURCE_IRQ,
 	},
 	{
-#if defined(LGE_MODEL_C729) || defined(LGE_MODEL_C800) || defined(CONFIG_MACH_MSM8X55_VICTOR)
+#if defined(CONFIG_LGE_MODEL_C729) || defined(CONFIG_LGE_MODEL_C800) || defined(CONFIG_MACH_MSM8X55_VICTOR)
 		.start	= 7,
 		.end	= 7,
 #else

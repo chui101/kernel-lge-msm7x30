@@ -260,7 +260,7 @@ int vga_camera_power_off (void)
 {
     struct vreg *vreg_cam_iovdd_1_8v;
 
-#if !defined(LGE_MODEL_C800)	
+#if !defined(CONFIG_LGE_MODEL_C800)	
     struct vreg *vreg_cam_dvdd_1_8v;
 #endif
 
@@ -278,7 +278,7 @@ int vga_camera_power_off (void)
     vreg_disable(vreg_cam_avdd_2_8v);
 
 
-#if !defined(LGE_MODEL_C800)
+#if !defined(CONFIG_LGE_MODEL_C800)
     vreg_cam_dvdd_1_8v = vreg_get(NULL, "gp13");
     vreg_disable(vreg_cam_dvdd_1_8v);
 #endif
@@ -301,7 +301,7 @@ int vga_camera_power_on (void)
 
     struct vreg *vreg_cam_iovdd_1_8v;
 
-#if !defined(LGE_MODEL_C800)	
+#if !defined(CONFIG_LGE_MODEL_C800)	
     struct vreg *vreg_cam_dvdd_1_8v;
 #endif
 
@@ -319,7 +319,7 @@ int vga_camera_power_on (void)
     vreg_enable(vreg_cam_iovdd_1_8v);
 
 	
-#if !defined(LGE_MODEL_C800)
+#if !defined(CONFIG_LGE_MODEL_C800)
     vreg_cam_dvdd_1_8v = vreg_get(NULL, "gp13");
     rc = vreg_set_level(vreg_cam_dvdd_1_8v, 1800);
     vreg_enable(vreg_cam_dvdd_1_8v);

@@ -101,15 +101,15 @@ static int mddi_mainlcd_pmic_backlight(int level)
 }
 static struct msm_panel_lgit_pdata mddi_mainlcd_panel_data = {
 
-#if defined (LGE_MODEL_C800)
-#if defined (LGE_MODEL_C800_REV_EVB) || defined (LGE_MODEL_C800_REV_A) || defined (LGE_MODEL_C800_REV_B)
+#if defined (CONFIG_LGE_MODEL_C800)
+#if defined (CONFIG_LGE_MODEL_C800_REV_EVB) || defined (CONFIG_LGE_MODEL_C800_REV_A) || defined (CONFIG_LGE_MODEL_C800_REV_B)
 	.gpio = 84,				/* lcd reset_n */
 #else
 	.gpio = 94,				/* lcd reset_n */
 #endif
-#else //defined (LGE_MODEL_C800)
+#else //defined (CONFIG_LGE_MODEL_C800)
 	.gpio = 84,				/* lcd reset_n */
-#endif //defined (LGE_MODEL_C800)
+#endif //defined (CONFIG_LGE_MODEL_C800)
 
 	.pmic_backlight = mddi_mainlcd_pmic_backlight,
 	.initialized = 1,
@@ -125,7 +125,7 @@ static struct platform_device mddi_mainlcd_panel_device = {
 ////////////////////////////////////////////////////////
 /* backlight device */
 
-#if defined(LGE_MODEL_C800_REV_EVB)
+#if defined(CONFIG_LGE_MODEL_C800_REV_EVB)
 static struct gpio_i2c_pin bl_i2c_pin[] = {
 	[0] = {
 		.sda_pin	= 75,
@@ -164,7 +164,7 @@ static struct i2c_board_info bl_i2c_bdinfo[] = {
 	},
 };
 
-#if defined(LGE_MODEL_C800_REV_EVB)
+#if defined(CONFIG_LGE_MODEL_C800_REV_EVB)
 static struct backlight_platform_data lm3530bl_data[] = {
 	[0] = {
 		.gpio = 25,

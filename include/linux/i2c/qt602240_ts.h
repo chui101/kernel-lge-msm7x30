@@ -32,7 +32,7 @@
 #endif
 
 /* The platform data for the AT42QT602240/ATMXT224 touchscreen driver */
-#ifndef CONFIG_MACH_MSM8X55_VICTOR
+#if !defined(CONFIG_MACH_MSM8X55_VICTOR) && !defined(CONFIG_MACH_MSM8X55_UNIVA_Q)
 struct qt602240_platform_data {
 	unsigned int x_line;
 	unsigned int y_line;

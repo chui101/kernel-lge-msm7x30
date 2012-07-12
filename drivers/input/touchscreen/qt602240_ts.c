@@ -549,7 +549,7 @@ static bool qt602240_object_writable(unsigned int type)
 	case QT602240_PROCI_ONETOUCH:
 #if !defined(CONFIG_MACH_MSM8X55_VICTOR) && !defined(CONFIG_MACH_MSM8X55_UNIVA_Q)
 	case QT602240_PROCI_TWOTOUCH:
-endif
+#endif
 	case QT602240_SPT_GPIOPWM:
 	case QT602240_SPT_SELFTEST:
 	case QT602240_SPT_CTECONFIG:

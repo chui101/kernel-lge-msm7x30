@@ -47,7 +47,7 @@
 #endif
 
 
-#ifdef LGE_MODEL_C800 	// kh.tak MicroSD Detection
+#if 1 	// kh.tak MicroSD Detection
 #define SYS_GPIO_SD_DET    42  /* SYS SD Detection GPIO Number 42 */
 #define SYS_GPIO_SD_EN_N   56 /* SYS SD Enable GPIO Number 56*/
 #endif

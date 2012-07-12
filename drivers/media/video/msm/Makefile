@@ -41,3 +41,5 @@ obj-$(CONFIG_MT9V113) += mt9v113.o mt9v113_reg.o
 obj-$(CONFIG_WEBCAM_OV7692) += ov7692.o
 obj-$(CONFIG_MT9D112) += mt9d112.o mt9d112_reg.o
 obj-$(CONFIG_MSM_GEMINI) += msm_gemini_dev.o msm_gemini_sync.o msm_gemini_core.o msm_gemini_hw.o msm_gemini_platform.o
+obj-$(CONFIG_LM2759_FLASH) += lm2759_flash.o
+

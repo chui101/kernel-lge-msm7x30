@@ -354,7 +354,7 @@ static int so340010_i2c_resume(struct i2c_client *i2c_dev)
 }
 #endif
 
-#ifdef CONFIG_MACH_MSM8X55_VICTOR
+#if defined(CONFIG_MACH_MSM8X55_VICTOR) || defined(CONFIG_MACH_MSM8X55_UNIVA_Q)
 static void so340010_power_down(void)
 {
 	gpio_tlmm_config(GPIO_CFG(so340010_pdata->sda, 0, GPIO_CFG_INPUT,

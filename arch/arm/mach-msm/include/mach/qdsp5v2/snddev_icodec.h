@@ -33,7 +33,7 @@
 #include <mach/pmic.h>
 
 
-#ifdef CONFIG_LGE_MODEL_E739
+//#if defined(CONFIG_LGE_MODEL_E739) || defined(CONFIG_LGE_MODEL_C800)
 void set_ampcal_data(void);
 void set_QTRcal_data(void);
 void set_voicecal_data(void);
@@ -85,4 +85,4 @@ struct snddev_icodec_data {
 	u32 property; /*variable used to hold the properties
 				internal to the device*/
 };
-#endif
+//#endif

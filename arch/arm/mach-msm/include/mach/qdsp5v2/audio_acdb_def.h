@@ -58,14 +58,14 @@
 #define ACDB_ID_I2S_TX					0x30
 #define ACDB_ID_HDMI					0x40
 
-#if defined(CONFIG_LGE_MODEL_E739)
+//#if defined(CONFIG_LGE_MODEL_E739) || defined(CONFIG_LGE_MODEL_C800)
 #define ACDB_ID_LGE_HEADSET_STEREO_VOICE_RX  0x50
 #define ACDB_ID_LGE_SPEAKER_STEREO_VOICE_RX  0x51
 #define ACDB_ID_LGE_HANDSET_AUDIO_RX                0x52
 #define ACDB_ID_LGE_BT_SCO_AUDIO_RX                  0x53
 #define ACDB_ID_LGE_MIC1_REC_TX               0x54
 #define ACDB_ID_LGE_HEADSET_SPEAKER_AUDIO_RX  0x55
-#endif
+//#endif
 /* ID used for virtual devices */
 #define PSEUDO_ACDB_ID 					0xFFFF
 

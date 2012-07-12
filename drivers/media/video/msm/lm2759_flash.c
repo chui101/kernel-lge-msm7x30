@@ -58,7 +58,7 @@
 
 #define LM2759_I2C_NAME  "lm2759"
 
-#if defined (LGE_MODEL_C800)
+#if defined (CONFIG_LGE_MODEL_C800)
 #define CAM_FLASH_EN_GPIO 19
 #endif
 
@@ -168,7 +168,7 @@ void lm2759_enable_torch_mode(int state)
 	}
 	else{
 		/* 110 : 196.875 mA (393.75 mA total) */ 
-#if defined (LGE_MODEL_C800)
+#if defined (CONFIG_LGE_MODEL_C800)
  		data = 0x07;
 #else
  #if defined (LGE_MODEL_C729_REV_A) || defined(LGE_MODEL_C729_REV_B)
@@ -179,7 +179,7 @@ void lm2759_enable_torch_mode(int state)
 #endif
 		lm2759_i2c_write(lm2759_client,LM2759_REG_TORCH_BRIGHTNESS,data);
 	}
-#if defined (LGE_MODEL_C800)
+#if defined (CONFIG_LGE_MODEL_C800)
 	lm2759_i2c_write(lm2759_client,LM2759_REG_ENABLE,0x0a);
 #else
 #if defined (LGE_MODEL_C729_REV_A) || defined(LGE_MODEL_C729_REV_B)
@@ -203,7 +203,7 @@ void lm2759_enable_flash_mode(int state)
 	}
 	else{
 		/* 1101 : 787.5 mA (1575 mA total) Default */
-#if defined (LGE_MODEL_C800)
+#if defined (CONFIG_LGE_MODEL_C800)
  		data = 0x0d; // 0x0b
 #else
  #if defined (LGE_MODEL_C729_REV_A) || defined(LGE_MODEL_C729_REV_B)
@@ -214,7 +214,7 @@ void lm2759_enable_flash_mode(int state)
 #endif
 		lm2759_i2c_write(lm2759_client,LM2759_REG_FLASH_BRIGHTNESS,data);
 	}
-#if defined (LGE_MODEL_C800)
+#if defined (CONFIG_LGE_MODEL_C800)
 	lm2759_i2c_write(lm2759_client,LM2759_REG_ENABLE,0x0B);
 #else
 #if defined (LGE_MODEL_C729_REV_A) || defined(LGE_MODEL_C729_REV_B)
@@ -275,7 +275,7 @@ static int lm2759_probe(struct i2c_client *client, const struct i2c_device_id *i
 	lm2759_client = client;
 //	lm2759_i2c_write(lm2759_client,LM2759_REG_ENABLE,0x11);
 
-#if defined (LGE_MODEL_C800)
+#if defined (CONFIG_LGE_MODEL_C800)
 	gpio_request(CAM_FLASH_EN_GPIO, "cam_flash_en");
 	gpio_tlmm_config(GPIO_CFG(CAM_FLASH_EN_GPIO, 0, GPIO_CFG_OUTPUT,
 				GPIO_CFG_NO_PULL, GPIO_CFG_2MA), GPIO_CFG_ENABLE);
