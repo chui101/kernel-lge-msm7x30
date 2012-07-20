@@ -42,12 +42,67 @@ struct gpio_input_state {
 	struct gpio_event_input_devs *input_devs;
 	const struct gpio_event_input_info *info;
 	struct hrtimer timer;
+// LGE_UPDATE_S delayed first detect
+	int first_time;
+// LGE_UPDATE_E
 	int use_irq;
 	int debounce_count;
 	spinlock_t irq_lock;
 	struct wake_lock wake_lock;
 	struct gpio_key_state key_state[0];
 };
+
+// LGE_UPDATE_S
+static struct gpio_input_state *virtual_ds;
+static int last_pressed = 0;
+static int virtual_lid = 0;
+// LGE_UPDATE_E
+
+// LGE_UPDATE_S
+// prevent to enter suspend when throwing slider event 
+struct wake_lock slide_event_wake_lock;
+// LGE_UPDATE_E
+
+
+// LGE_UPDATE_S delayed first detect
+static int gpio_event_input_enable_irqs(struct gpio_input_state *ds)
+{
+	int i;
+	int err;
+	unsigned int irq;
+
+	for (i = 0; i < ds->info->keymap_size; i++) {
+		err = irq = gpio_to_irq(ds->info->keymap[i].gpio);
+		if (err < 0)
+			goto err_gpio_get_irq_num_failed;
+		enable_irq(irq);
+		enable_irq_wake(irq);
+	}
+	return 0;
+
+err_gpio_get_irq_num_failed:
+	return err;
+}
+
+static int gpio_event_input_disable_irqs(struct gpio_input_state *ds)
+{
+	int i;
+	int err;
+	unsigned int irq;
+
+	for (i = 0; i < ds->info->keymap_size; i++) {
+		err = irq = gpio_to_irq(ds->info->keymap[i].gpio);
+		if (err < 0)
+			goto err_gpio_get_irq_num_failed;
+		disable_irq(irq);
+		disable_irq_wake(irq);
+	}
+	return 0;
+
+err_gpio_get_irq_num_failed:
+	return err;
+}
+// LGE_UPDATE_E
 
 static enum hrtimer_restart gpio_event_input_timer_func(struct hrtimer *timer)
 {
@@ -85,8 +140,25 @@ static enum hrtimer_restart gpio_event_input_timer_func(struct hrtimer *timer)
 				ds->info->type, key_entry->code,
 				i, key_entry->gpio);
 		}
-		npolarity = !(gpio_flags & GPIOEDF_ACTIVE_HIGH);
+		npolarity = !(gpio_flags & GPIOEDF_ACTIVE_HIGH);		
 		pressed = gpio_get_value(key_entry->gpio) ^ npolarity;
+
+// LGE_UPDATE_S delayed first detect
+		if(	ds->first_time == 0)
+		{	
+			if(pressed)
+			{
+				key_state->debounce = DEBOUNCE_PRESSED;
+			}
+			else
+			{
+				key_state->debounce = DEBOUNCE_NOTPRESSED;
+			}
+
+			goto direct_input_event;
+		}
+// LGE_UPDATE_E
+
 		if (debounce & DEBOUNCE_POLL) {
 			if (pressed == !(debounce & DEBOUNCE_PRESSED)) {
 				ds->debounce_count++;
@@ -123,12 +195,27 @@ static enum hrtimer_restart gpio_event_input_timer_func(struct hrtimer *timer)
 			key_state->debounce |= DEBOUNCE_WAIT_IRQ;
 		else
 			key_state->debounce |= DEBOUNCE_POLL;
+
+// LGE_UPDATE_S delayed first detect
+direct_input_event:
+// LGE_UPDATE_E
+		pr_info("%s: key_entry->gpio: %d\n",__func__ ,key_entry->gpio);
+
 		if (gpio_flags & GPIOEDF_PRINT_KEYS)
 			pr_info("gpio_keys_scan_keys: key %x-%x, %d (%d) "
 				"changed to %d\n", ds->info->type,
 				key_entry->code, i, key_entry->gpio, pressed);
 		input_event(ds->input_devs->dev[key_entry->dev], ds->info->type,
 			    key_entry->code, pressed);
+
+		// LGE_UPDATE_S
+		// prevent to enter suspend when throwing slider event 
+		wake_lock_timeout(&slide_event_wake_lock, 5*HZ);
+		// LGE_UPDATE_E
+
+// LGE_UPDATE_S
+		last_pressed = pressed;
+// LGE_UPDATE_E
 	}
 
 #if 0
@@ -149,6 +236,14 @@ static enum hrtimer_restart gpio_event_input_timer_func(struct hrtimer *timer)
 
 	spin_unlock_irqrestore(&ds->irq_lock, irqflags);
 
+// LGE_UPDATE_S delayed first detect
+    if(	ds->first_time == 0)
+	{
+		ds->first_time = 1;
+		if(ds->use_irq)	gpio_event_input_enable_irqs(ds);
+	}
+// LGE_UPDATE_E
+
 	return HRTIMER_NORESTART;
 }
 
@@ -165,6 +260,8 @@ static irqreturn_t gpio_event_input_irq_handler(int irq, void *dev_id)
 		return IRQ_HANDLED;
 
 	key_entry = &ds->info->keymap[keymap_index];
+	
+	pr_info("%s: slide interrupt is detected...\n", __func__);	
 
 	if (ds->info->debounce_time.tv64) {
 		spin_lock_irqsave(&ds->irq_lock, irqflags);
@@ -186,9 +283,11 @@ static irqreturn_t gpio_event_input_irq_handler(int irq, void *dev_id)
 			ks->debounce = DEBOUNCE_UNSTABLE;
 		}
 		spin_unlock_irqrestore(&ds->irq_lock, irqflags);
-	} else {
-		pressed = gpio_get_value(key_entry->gpio) ^
-			!(ds->info->flags & GPIOEDF_ACTIVE_HIGH);
+	}
+	else 
+	{
+		pressed = gpio_get_value(key_entry->gpio) ^ !(ds->info->flags & GPIOEDF_ACTIVE_HIGH);
+
 		if (ds->info->flags & GPIOEDF_PRINT_KEYS)
 			pr_info("gpio_event_input_irq_handler: key %x-%x, %d "
 				"(%d) changed to %d\n",
@@ -245,9 +344,13 @@ int gpio_event_input_func(struct gpio_event_input_devs *input_devs,
 	di = container_of(info, struct gpio_event_input_info, info);
 
 	if (func == GPIO_EVENT_FUNC_SUSPEND) {
+#if defined(CONFIG_MACH_MSM8X55_UNIVA_Q)
+#if defined(LGE_MODEL_C800_REV_A) || defined(LGE_MODEL_C800_REV_B)
 		if (ds->use_irq)
 			for (i = 0; i < di->keymap_size; i++)
 				disable_irq(gpio_to_irq(di->keymap[i].gpio));
+#endif
+#endif
 		hrtimer_cancel(&ds->timer);
 		return 0;
 	}
@@ -278,6 +381,12 @@ int gpio_event_input_func(struct gpio_event_input_devs *input_devs,
 		ds->info = di;
 		wake_lock_init(&ds->wake_lock, WAKE_LOCK_SUSPEND, "gpio_input");
 		spin_lock_init(&ds->irq_lock);
+
+		// LGE_UPDATE_S
+		// prevent to enter suspend when throwing slider event 
+		wake_lock_init(&slide_event_wake_lock, WAKE_LOCK_SUSPEND, "slide_event");
+		// LGE_UPDATE_E
+
 
 		for (i = 0; i < di->keymap_size; i++) {
 			int dev = di->keymap[i].dev;
@@ -323,7 +432,17 @@ int gpio_event_input_func(struct gpio_event_input_devs *input_devs,
 
 		hrtimer_init(&ds->timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
 		ds->timer.function = gpio_event_input_timer_func;
-		hrtimer_start(&ds->timer, ktime_set(0, 0), HRTIMER_MODE_REL);
+// LGE_UPDATE_S delayed first detect
+//		hrtimer_start(&ds->timer, ktime_set(0, 0), HRTIMER_MODE_REL);
+		if(ds->use_irq)	gpio_event_input_disable_irqs(ds);
+		ds->first_time = 0;
+		hrtimer_start(&ds->timer, ktime_set(5, 0), HRTIMER_MODE_REL); // 5secs delay for sub lcd / touch control
+// LGE_UPDATE_E
+
+// LGE_UPDATE_S
+		virtual_ds = ds;
+// LGE_UPDATE_E
+
 		spin_unlock_irqrestore(&ds->irq_lock, irqflags);
 		return 0;
 	}
@@ -351,3 +470,42 @@ err_bad_keymap:
 err_ds_alloc_failed:
 	return ret;
 }
+
+// LGE_UPDATE_S
+int gpio_event_get_virtual_lid(void)
+{
+   return virtual_lid;
+}
+
+void gpio_event_input_set_virtual(int onoff)
+{
+	int pressed;
+	const struct gpio_event_direct_entry *key_entry;
+
+	// assume that only uses once keymap
+	key_entry = virtual_ds->info->keymap;
+
+	if(onoff) pressed = 1;
+	else pressed = 0;
+
+	virtual_lid = 1;
+
+	input_event(virtual_ds->input_devs->dev[key_entry->dev], virtual_ds->info->type,
+		    key_entry->code, pressed);
+
+	//pr_info("gpio_event_input_virtual: type:%d, code:%d, pressed:%d\n",virtual_ds->info->type, key_entry->code, pressed);
+
+}
+
+int gpio_event_input_get_virtual(void)
+{
+	//pr_info("gpio_event_input_get_virtual: last_pressed:%d\n",last_pressed);
+
+	return last_pressed;
+}
+
+EXPORT_SYMBOL(gpio_event_get_virtual_lid);
+EXPORT_SYMBOL(gpio_event_input_set_virtual);
+EXPORT_SYMBOL(gpio_event_input_get_virtual);
+// LGE_UPDATE_E
+

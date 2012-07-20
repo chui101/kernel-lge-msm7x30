@@ -735,5 +735,13 @@ config LGE_TUNE_610
 	  Say Y here if you want to tune registers for sk6100 devices
 
 	default n
+
+config TOUCHSCREEN_MXT140
+        default n
+        tristate "ATMEL mXT140 touchscreens"
+        depends on I2C
+        help
+          Say Y here if you have a ATMEL mXT140 touchscreen.
+          module will be called atmel_mxt140.
 		 
 endif

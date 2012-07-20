@@ -5,6 +5,8 @@ ifeq ($(CONFIG_USB_GADGET_DEBUG),y)
 	EXTRA_CFLAGS		+= -DDEBUG
 endif
 
+obj-$(CONFIG_USB_SUPPORT_LGE_ANDROID_GADGET)    += u_lgeusb.o
+
 obj-$(CONFIG_USB_DUMMY_HCD)	+= dummy_hcd.o
 obj-$(CONFIG_USB_NET2280)	+= net2280.o
 obj-$(CONFIG_USB_AMD5536UDC)	+= amd5536udc.o
@@ -67,3 +69,10 @@ obj-$(CONFIG_USB_G_MULTI)	+= g_multi.o
 obj-$(CONFIG_USB_G_NOKIA)	+= g_nokia.o
 obj-$(CONFIG_USB_G_WEBCAM)	+= g_webcam.o
 obj-$(CONFIG_USB_G_ANDROID)	+= g_android.o
+obj-$(CONFIG_USB_ANDROID)       += android.o
+obj-$(CONFIG_USB_ANDROID_ACM)   += f_acm.o u_serial.o
+obj-$(CONFIG_USB_ANDROID_ADB)   += f_adb.o
+obj-$(CONFIG_USB_ANDROID_MASS_STORAGE)  += f_mass_storage.o
+obj-$(CONFIG_USB_ANDROID_MTP)   += f_mtp.o
+obj-$(CONFIG_USB_ANDROID_RNDIS) += f_rndis.o u_ether.o
+

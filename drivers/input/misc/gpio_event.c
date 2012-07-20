@@ -28,6 +28,40 @@ struct gpio_event {
 	void *state[0];
 };
 
+
+// LGE_UPDATE_S
+extern void gpio_event_input_set_virtual(int onoff);
+extern int gpio_event_input_get_virtual(void);
+
+static ssize_t gpio_input_event_show(struct device *dev, struct device_attribute *attr, char *buf)
+{
+        int value = 0;
+
+        value = gpio_event_input_get_virtual();
+
+        //printk(KERN_INFO "gpio_input_event_show - value:%d\n", value);
+
+        sprintf(buf,"%d\n",value);
+
+        return (strlen(buf)+1)*sizeof(char);;
+}
+static ssize_t gpio_input_event_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t size)
+{
+        int value = 0;
+
+        sscanf(buf, "%d\n", &value);
+
+        //printk(KERN_INFO "gpio_input_event_store - value:%d\n", value);
+
+        gpio_event_input_set_virtual(value);
+
+        return 0;
+}
+
+static DEVICE_ATTR(virtual_event, S_IRUGO | S_IWUSR | /*S_IWOTH |*/ S_IXOTH, gpio_input_event_show, gpio_input_event_store);
+// LGE_UPDATE_E
+
+
 static int gpio_input_event(
 	struct input_dev *dev, unsigned int type, unsigned int code, int value)
 {
@@ -191,6 +225,11 @@ static int gpio_event_probe(struct platform_device *pdev)
 			goto err_input_register_device_failed;
 		}
 		registered++;
+// LGE_UPDATE_S
+        if (device_create_file(&ip->input_devs->dev[i]->dev, &dev_attr_virtual_event) < 0)
+                pr_err("Failed to create device file(%s)!\n", dev_attr_virtual_event.attr.name);
+// LGE_UPDATE_E
+
 	}
 
 	return 0;

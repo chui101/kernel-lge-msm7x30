@@ -44,67 +44,18 @@
 #include <linux/earlysuspend.h>
 #endif
 
-#if 0
-//#if defined(LGE_MODEL_C729_REV_EVB)
-#include <mach/pmic.h>
-
-#define KYPD_LED_DEFAULT	1
-//#endif
-#endif
-
 int saved_backlight_level = 0;
 
-#if 1
 atomic_t lcd_event_handled;
 atomic_t lcd_bootup_handle;
-#else
-
-static int lm3530_write(struct i2c_client *client, u8 reg, u8 val);
-
-atomic_t backlight_event_handle;
-
-
-struct timer_list timerbl_bl;
-struct timer_list timerbl_lcd;
-struct i2c_client *bl_i2c_client;
-
-int next_bl = 0;
-//int current_bl = 0;
-
-static void lcd_timer(unsigned long arg)
-{
-	lm3530_write(bl_i2c_client, 0xA0, next_bl);
-	atomic_set(&backlight_event_handle,0);
-}
-
-static void bl_timer(unsigned long arg)
-{
-	if(atomic_read(&lcd_event_handled) == 0) 
-	{
-//		printk("##LMH_TEST	 retimer lcd_event_handled = 0\n") ;
-		mod_timer(&timerbl_bl, jiffies + msecs_to_jiffies(30));
-	}
-	else
-	{
-//		printk("##LMH_TEST	BL-ON  test_curr=%d / current_bl=%d / next_bl = %d\n", test_curr,current_bl ,next_bl);
-		mod_timer(&timerbl_lcd, jiffies + msecs_to_jiffies(40));
-	}
-}
-#endif
 
 /********************************************
  * Definition
  ********************************************/
-//#define LCD_LED_MAX			0x7F			/* 20mA */
 #define LCD_LED_MAX			0x71			/* 20mA */
 #define LCD_LED_NOR			0X7A		/* 15mA */
 #define LCD_LED_MIN			0x0			/* 2mA */
 #define DEFAULT_BRIGHTNESS	LCD_LED_MAX
-
-
-//#define MAX_BRIGHTNESS		(0xff)
-//#define MIN_BRIGHTNESS		(0)
-
 
 
 #ifdef CONFIG_BACKLIGHT_LEDS_CLASS
@@ -152,28 +103,6 @@ static void leds_brightness_get(void);
 /********************************************
  * Functions
  ********************************************/
- #if 0
-static int lm3530_read(struct i2c_client *client, u8 reg, u8 *pval)
-{
-	int ret;
-	int status;
-
-	if (client == NULL) { 	/* No global client pointer? */
-		dprintk("client is null\n");
-		return -1;
-	}
-
-	if ((ret = i2c_smbus_read_byte_data(client, reg)) >= 0) {
-		*pval = ret;
-		status = 0;
-	} else {
-		status = -EIO;
-		dprintk("fail to read(reg=0x%x,val=0x%x)\n", reg,*pval);
-	}
-
-	return status;
-}
-#endif
 
 static int lm3530_write(struct i2c_client *client, u8 reg, u8 val)
 {
@@ -201,11 +130,7 @@ static int lm3530_write(struct i2c_client *client, u8 reg, u8 val)
 static void lm3530_hw_reset(struct lm3530_driver_data *drvdata)
 {
 	if(drvdata->client && gpio_is_valid(drvdata->gpio)) {
-#if 0		
-		gpio_configure(drvdata->gpio, GPIOF_DRIVE_OUTPUT);
-#else
 		gpio_direction_output(drvdata->gpio, 1);
-#endif
 		gpio_set_value(drvdata->gpio, 1);
 		udelay(5);
 		gpio_set_value(drvdata->gpio, 0);
@@ -262,36 +187,6 @@ static void lm3530_sleep(struct lm3530_driver_data *drvdata)
 	
 			drvdata->state = SLEEP_STATE;
 }
-
-#if 0
-static void lm3530_wakeup(struct lm3530_driver_data *drvdata)
-{
-	if (!drvdata || drvdata->state == NORMAL_STATE)
-		return;
-
-//	dprintk("operation mode is %s\n");
-
-	if (drvdata->state == POWEROFF_STATE) {
-		lm3530_go_opmode(drvdata);
-	}
-	else if(drvdata->state == SLEEP_STATE) {
-		//lm3530_write(drvdata->client, 0x03, drvdata->intensity);
-		drvdata->state = NORMAL_STATE;
-		}
-}
-
-
-static void lm3530_poweron(struct lm3530_driver_data *drvdata)
-{
-	if (!drvdata || drvdata->state != POWEROFF_STATE)
-		return;
-	
-	dprintk("POWER ON \n");
-
-	lm3530_init(drvdata);
-	//lm3530_write(drvdata->client, 0x03, drvdata->intensity);
-}
-#endif
 
 static void lm3530_poweroff(struct lm3530_driver_data *drvdata)
 {
@@ -412,19 +307,6 @@ static int lm3530_cal_brightness(struct lm3530_driver_data *drvdata, int level)
 
 static int lm3530_send_intensity(struct lm3530_driver_data *drvdata, int next)
 {
-#if 0
-	int ret = -EPERM;
-
-	if(next)
-		ret = pmic_set_led_intensity(LED_KEYPAD, KYPD_LED_DEFAULT);
-	else
-		ret = pmic_set_led_intensity(LED_KEYPAD, 0);
-	
-	if (ret)
-		printk(KERN_WARNING "%s: can't set lcd backlight!\n",
-					__func__);
-#endif
-
 	if(next > drvdata->max_intensity)
 		next = drvdata->max_intensity;
 	
@@ -432,29 +314,9 @@ static int lm3530_send_intensity(struct lm3530_driver_data *drvdata, int next)
 		next = LCD_LED_MIN;
 	dprintk("next current is %d\n", next);
 
-#if 0
-	if(drvdata->state == NORMAL_STATE && drvdata->intensity != next)
-	{
-		if(!atomic_read(&lcd_event_handled) || atomic_read(&backlight_event_handle))
-		{
-			next_bl = next;
-			bl_i2c_client = drvdata->client ;
-			atomic_set(&backlight_event_handle,1);	
-			mod_timer(&timerbl_bl, jiffies + msecs_to_jiffies(100));		
-		}		
-		else
-		{
-//			printk("##LMH_TEST   SET_BL <normal> current_bl : %d / next=%d\n", current_bl,next);		
-			lm3530_write(drvdata->client, 0xA0, next);
-		}	
-	}
-#else
 	if(drvdata->state == NORMAL_STATE && drvdata->intensity != next)
 		lm3530_write(drvdata->client, 0xA0, next);
-#endif	
-	drvdata->bd->props.brightness =
-
-	drvdata->intensity = next;
+	drvdata->bd->props.brightness = drvdata->intensity = next;
 
 	return 0;
 }
@@ -521,20 +383,6 @@ static int lm3530_resume(struct i2c_client *i2c_dev)
 static int lm3530_set_brightness(struct backlight_device *bd)
 {
 	struct lm3530_driver_data *drvdata = dev_get_drvdata(bd->dev.parent);
-
-#if 0
-	int ret = -EPERM;
-
-	if(bd->props.brightness)
-		ret = pmic_set_led_intensity(LED_KEYPAD, KYPD_LED_DEFAULT);
-	else
-		ret = pmic_set_led_intensity(LED_KEYPAD, 0);
-	
-	if (ret)
-		printk(KERN_WARNING "%s: can't set lcd backlight!\n",
-					__func__);
-#endif
-	
 	return lm3530_send_intensity(drvdata, bd->props.brightness);
 }
 
@@ -650,17 +498,8 @@ static int lm3530_probe(struct i2c_client *i2c_dev, const struct i2c_device_id *
 	Register backlight driver to LED class
 */
 
-#if 1
-atomic_set(&lcd_event_handled,1);
-atomic_set(&lcd_bootup_handle,1);
-#else
-
-setup_timer(&timerbl_bl, bl_timer, (unsigned long)i2c_dev);
-setup_timer(&timerbl_lcd, lcd_timer, (unsigned long)i2c_dev);
-atomic_set(&lcd_event_handled,1);
-atomic_set(&backlight_event_handle,0);
-atomic_set(&lcd_bootup_handle,1);
-#endif
+	atomic_set(&lcd_event_handled,1);
+	atomic_set(&lcd_bootup_handle,1);
 
 #ifdef CONFIG_BACKLIGHT_LEDS_CLASS
         if(led_classdev_register(&i2c_dev->dev, &lm3530_led_dev) == 0) {

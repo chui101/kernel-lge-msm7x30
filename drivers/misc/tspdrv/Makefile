@@ -3,3 +3,4 @@
 # 
 
 obj-$(CONFIG_IMMERSION_VIBRATOR)		+= tspdrv.o
+

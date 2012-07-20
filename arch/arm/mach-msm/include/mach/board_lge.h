@@ -127,8 +127,10 @@ struct qt602240_platform_data {
 struct touch_platform_data {
 	int ts_x_min;
 	int ts_x_max;
+	int ts_x_scrn_max;
 	int ts_y_min;
 	int ts_y_max;
+	int ts_y_scrn_max;
 	int ts_y_start;
 	int (*power)(unsigned char onoff);
 	int irq;
@@ -137,6 +139,7 @@ struct touch_platform_data {
 	int scl;
 	int sda;
 	int ce;
+	int reset;
 };
 #endif
 
