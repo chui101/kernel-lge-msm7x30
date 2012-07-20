@@ -189,7 +189,11 @@ static void __init lge_make_fb_pmem(void)
 	struct membank *bank = &meminfo.bank[2];
 
 	fb_copy_phys = bank->start + bank->size + LGE_RAM_CONSOLE_SIZE + LGE_CRASH_LOG_SIZE;
+#ifdef CONFIG_MACH_MSM8X55_UNIVA_Q // MDPI devices like Univa Q
+	fb_copy_size = 320 * 480 * 2;
+#else //Victor and other HDPI devices
 	fb_copy_size = 480 * 800 * 2;
+#endif
 	fb_copy_virt = ioremap(fb_copy_phys, fb_copy_size);
 
 	printk("FB START PHYS ADDR : %x\n", fb_copy_phys);
@@ -197,7 +201,11 @@ static void __init lge_make_fb_pmem(void)
 	printk("FB SIZE : %x\n", fb_copy_size);
 
 	if (on_hidden_reset)
+#ifdef CONFIG_MACH_MSM8X55_UNIVA_Q // MDPI 
+		fb_copy_virt_rgb888 = kmalloc(sizeof(unsigned int) * 320 * 480 * 2, GFP_KERNEL);
+#else // HDPI
 		fb_copy_virt_rgb888 = kmalloc(sizeof(unsigned int) * 480 * 800 * 2, GFP_KERNEL);
+#endif
 
 	return;
 }

@@ -28,7 +28,7 @@
 #include <mach/dma.h>
 #include <mach/msm_hsusb.h>
 #include <mach/rpc_hsusb.h>
-#ifdef CONFIG_USB_ANDROID
+#ifdef CONFIG_USB_G_ANDROID
 #include <linux/usb/android_composite.h>
 #endif
 
