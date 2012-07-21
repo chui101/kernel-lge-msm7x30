@@ -30,12 +30,15 @@
 
 #define VENDOR_LGE	0x1004
 
+/*
+ * chui101: should be handled by the board configuration (board-victor.h, board-univaq.h, etc) due to varying sizes
+ 
 #ifdef CONFIG_ARCH_MSM7X30
 
-/* MSM_PMEM_SF_SIZE PMEM Size 0x1700000 --> 0x1C00000
+* MSM_PMEM_SF_SIZE PMEM Size 0x1700000 --> 0x1C00000
 * 2011-05-07, cheongil.hyun@lge.com
 * 2011-08-20, Increas SF PMEM(0x1D00000), munyoung.hwang@lge.com
-*/
+
 #define MSM_PMEM_SF_SIZE	0x1D00000
 #ifdef CONFIG_FB_MSM_TRIPLE_BUFFER
 #define MSM_FB_SIZE             0x780000
@@ -61,6 +64,8 @@
 #ifdef CONFIG_LGE_HANDLE_PANIC
 #define LGE_CRASH_LOG_SIZE		(4 * SZ_1K)
 #endif
+ 
+*/
 
 /* board revision information */
 enum {

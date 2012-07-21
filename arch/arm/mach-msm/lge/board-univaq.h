@@ -24,27 +24,17 @@
 #include "pm.h"
 
 
-#if 0
-#define MSM_PMEM_SF_SIZE	0x1700000
-#define MSM_FB_SIZE		0x500000
-
-#define MSM_PMEM_ADSP_SIZE      0x2000000
-//#define MSM_PMEM_ADSP_SIZE      0x1800000
-
-#define MSM_FLUID_PMEM_ADSP_SIZE	0x2800000
-#define PMEM_KERNEL_EBI1_SIZE   0x600000
-#define MSM_PMEM_AUDIO_SIZE     0x200000
-
-#else
-
+#ifdef CONFIG_FB_MSM_TRIPLE_BUFFER
+#define MSM_FB_SIZE           		0x1C2000 // (= 320*480*4(32bpp)*3(triple buffering)) 
+#else 
 #define MSM_FB_SIZE           		0x12C000 // (= 320*480*4(32bpp)*2(double buffering)) 
+#endif
+#define MSM_PMEM_SF_SIZE      		0x1D00000 //(this can be zero if TARGET_GRALLOC_USES_ASHMEM enabled) 
+
 #define MSM_PMEM_ADSP_SIZE    		0x1D1A000 
-#define MSM_PMEM_SF_SIZE      		0x1000000 //(this can be zero if TARGET_GRALLOC_USES_ASHMEM enabled) 
 #define PMEM_KERNEL_EBI1_SIZE 		0x600000 
 #define MSM_PMEM_AUDIO_SIZE   		0x200000 
 #define MSM_FLUID_PMEM_ADSP_SIZE	0x2800000
-
-#endif
 
 
 #if 1 	// kh.tak MicroSD Detection
