@@ -25,9 +25,9 @@
 
 
 #ifdef CONFIG_FB_MSM_TRIPLE_BUFFER
-#define MSM_FB_SIZE           		0x1C2000 // (= 320*480*4(32bpp)*3(triple buffering)) 
+#define MSM_FB_SIZE           		0x780000 
 #else 
-#define MSM_FB_SIZE           		0x12C000 // (= 320*480*4(32bpp)*2(double buffering)) 
+#define MSM_FB_SIZE           		0x500000 
 #endif
 #define MSM_PMEM_SF_SIZE      		0x1D00000 //(this can be zero if TARGET_GRALLOC_USES_ASHMEM enabled) 
 
@@ -267,13 +267,8 @@
 #endif
 
 /* Audio Subsystem(AMP) I2C Number */
-#if defined(LGE_MODEL_C800_REV_EVB) ||defined(LGE_MODEL_C800_REV_C)
 #define GPIO_AMP_I2C_SDA	89
 #define GPIO_AMP_I2C_SCL	88
-#else
-#define GPIO_AMP_I2C_SDA	144
-#define GPIO_AMP_I2C_SCL	143
-#endif
 
 
 #endif

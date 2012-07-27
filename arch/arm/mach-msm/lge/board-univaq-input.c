@@ -325,7 +325,7 @@ static struct platform_device flip_gpio_slide_device = {
 
 /* Direct GPIO Side Keys */
 
-#if defined(CONFIG_LGE_MODEL_C800_REV_EVB)
+#if 1 //defined(CONFIG_LGE_MODEL_C800)
 static struct gpio_keys_button univaq_sidekey_buttons[] = {
 	{	
 		.code		= KEY_VOLUMEUP,

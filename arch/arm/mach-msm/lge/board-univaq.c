@@ -355,10 +355,6 @@ static struct platform_device *devices[] __initdata = {
 	&msm_device_uart_dm1,
 	&qup_device_i2c,
 	&msm_ebi0_thermal,
-#ifdef CONFIG_MSM_ROTATOR
-    &msm_rotator_device,
-#endif
-       &msm_device_vidc_720p,      // Video Codec
 	&msm_ebi1_thermal
 };
 

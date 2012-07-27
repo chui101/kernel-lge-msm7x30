@@ -68,12 +68,17 @@ static struct platform_device msm_vpe_device = {
  =====================================================================================*/
 
 static struct platform_device *victor_camera_msm_devices[] __initdata = {
- #ifdef CONFIG_MSM_VPE
-    &msm_vpe_device,
+#ifdef CONFIG_MSM_VPE
+	&msm_vpe_device,
 #endif
-//#ifdef CONFIG_MSM_ROTATOR
-//    &msm_rotator_device,
-//#endif
+#ifdef CONFIG_MSM_ROTATOR
+	&msm_rotator_device,
+#endif
+	&msm_device_vidc_720p,      // Video Codec
+#ifdef CONFIG_MSM_GEMINI
+	&msm_gemini_device,
+#endif
+
 };
 
 

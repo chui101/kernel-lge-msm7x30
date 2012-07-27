@@ -84,10 +84,14 @@ int WriteI2C(char reg, char val)
 	buf[1] = val;
 
 	err = i2c_transfer(_data->client->adapter, &msg, 1);
-	if (err < 0)
-		return -EIO;
-	else
+	if (err < 0) {
+		dev_err(&_data->client->dev, "%s: i2c write error (%d)\n", MODULE_NAME, err);
+		// return -EIO;
+		return err;
+	}
+	else {
 		return 0;
+	}
 }
 
 

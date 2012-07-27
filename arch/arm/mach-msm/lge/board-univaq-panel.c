@@ -15,6 +15,7 @@
 #include <linux/platform_device.h>
 #include <linux/delay.h>
 #include <linux/io.h>
+#include <linux/fb.h>
 #include <linux/mfd/pmic8058.h>
 #include <asm/mach-types.h>
 #include <mach/mpp.h>
@@ -179,6 +180,38 @@ static struct backlight_platform_data lm3530bl_data[] = {
 #endif
 
 
+struct msm_fb_info_st {
+        unsigned int width_mm ;
+        unsigned int height_mm ;
+};
+
+/*write down the mm size of LCD */
+static struct msm_fb_info_st msm_fb_info_data = {
+        .width_mm = 50,
+        .height_mm = 83
+};
+
+static int msm_fb_event_notify(struct notifier_block *self,
+                              unsigned long action, void *data)
+{
+        struct fb_event *event = data;
+        struct fb_info *info = event->info;
+        struct msm_fb_info_st *fb_info_mm = &msm_fb_info_data;
+        int ret = 0;
+
+        switch(action) {
+        case FB_EVENT_FB_REGISTERED:
+                info->var.width = fb_info_mm->width_mm;
+                info->var.height = fb_info_mm->height_mm;
+                break;
+        }
+        return ret;
+}
+
+static struct notifier_block msm_fb_event_notifier = {
+        .notifier_call  = msm_fb_event_notify,
+};
+
 #if 0
 #define GPIO_BL_I2C_SDA	75
 #define GPIO_BL_I2C_SCL	74
@@ -259,7 +292,7 @@ void __init univaq_init_i2c_backlight(int bus_num)
 
 void __init lge_add_lcd_devices(void)
 {
-
+	fb_register_client(&msm_fb_event_notifier);
 	platform_device_register(&mddi_mainlcd_panel_device);
 	lge_add_gpio_i2c_device(univaq_init_i2c_backlight);
 	msm_fb_add_devices();
