@@ -50,8 +50,9 @@
 
 #define HS_PWR_K		0x6F	/* Power key */
 #define HS_END_K		0x51	/* End key or Power key */
-#define HS_STEREO_HEADSET_K	0x82
-#define HS_HEADSET_SWITCH_K	0x84
+#define HS_STEREO_HEADSET_K		0x82 
+#define HS_STEREO_HEADPHONE_K	0x83
+#define HS_HEADSET_SWITCH_K		0x84
 #define HS_HEADSET_SWITCH_2_K	0xF0
 #define HS_HEADSET_SWITCH_3_K	0xF1
 #define HS_HEADSET_HEADPHONE_K	0xF6
@@ -190,6 +191,7 @@ static const uint32_t hs_key_map[] = {
 	KEY(HS_PWR_K, KEY_POWER),
 	KEY(HS_END_K, KEY_END),
 	KEY(HS_STEREO_HEADSET_K, SW_HEADPHONE_INSERT_W_MIC),
+	KEY(HS_STEREO_HEADPHONE_K, SW_HEADPHONE_INSERT),
 	KEY(HS_HEADSET_HEADPHONE_K, SW_HEADPHONE_INSERT),
 	KEY(HS_HEADSET_MICROPHONE_K, SW_MICROPHONE_INSERT),
 	KEY(HS_HEADSET_SWITCH_K, KEY_MEDIA),
@@ -317,6 +319,7 @@ static void report_hs_key(uint32_t key_code, uint32_t key_parm)
 		break;
 #endif
 	case -1:
+	
 		printk(KERN_ERR "%s: No mapping for remote handset event %d\n",
 				 __func__, temp_key_code);
 		return;

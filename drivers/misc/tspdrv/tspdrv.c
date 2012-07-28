@@ -36,6 +36,7 @@
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/timer.h>
+#include <linux/hrtimer.h>
 #include <linux/fs.h>
 #include <linux/version.h>
 #include <linux/miscdevice.h>
@@ -57,6 +58,7 @@
 #endif
 
 #include <mach/board_lge.h>
+#include "../../staging/android/timed_output.h" //chui101: add sysfs timed output for AOSP framework compatibility
 
 /* Device name and version information */
 #define VERSION_STR " v3.4.55.5\n"                  /* DO NOT CHANGE - this is auto-generated */
@@ -100,6 +102,117 @@ struct lge_vibrator_platform_data *platform_vibe_data = 0;
 #else
     #include "VibeOSKernelLinuxTime.c"
 #endif
+
+///////////////////////////////////////////////
+/* chui101: add in timed output sysfs device */
+///////////////////////////////////////////////
+#define VIBRATOR_MAX_TIMEOUT 5000
+static struct hrtimer timer;
+
+static int vibrator_value = 0; // chui101: vibtime passed to work funct (what the state is)
+static int vibrator_work; // chui101: vibtime gotten from sysfs (what the state should be)
+
+static void tspdrv_queue_callback(struct work_struct *foo); // prototype function for workqueue callback function
+static DECLARE_WORK(tspdrv_queue, tspdrv_queue_callback); // create workqueue tspdrv_queue
+
+// chui101: callback function to turn on vibe from userspace (sysfs)
+//     value = time to turn on vibration in ms
+static void enable_tspdrv_from_userspace(struct timed_output_dev *dev,int value)
+{
+	printk(KERN_INFO "[ImmVibe] %s : time = %d ms \n",__func__,value);
+	hrtimer_cancel(&timer);
+	
+	// don't vibrate for longer than 5 seconds
+	if (value > 0) {
+		if (value > VIBRATOR_MAX_TIMEOUT)
+			value = VIBRATOR_MAX_TIMEOUT;
+	} else {
+		// can't have time < 0
+		value = 0;
+	}
+	vibrator_work = value; // store this number as the number accessed by the workqueue 
+	schedule_work(&tspdrv_queue); // tell the system to callback and turn on vibe
+	hrtimer_start(&timer, ktime_set(value / 1000, (value % 1000) * 1000000), HRTIMER_MODE_REL); // schedule the time to turn off the vibe
+	vibrator_value = 0; // reset vibrator_value to 0 now that it's queued up
+}
+
+// chui101: turns on and off vibrator from user space. should only be called from work queue
+static int tspdrv_set(int timeout)
+{
+	if(!timeout) {
+		// printk(KERN_INFO "[ImmVibe] Off\n");
+		// call LG functions to turn off vibe
+        tspdrv_ic_enable_set(0);
+        tspdrv_power_set(0);
+        tspdrv_pwm_set(0,0);
+	} else {
+		// printk(KERN_INFO "[ImmVibe] Enabled for %d ms\n", timeout);
+		// call functions to turn on vibe
+        tspdrv_pwm_set(1,platform_vibe_data->amp_value);
+        tspdrv_power_set(1);
+        tspdrv_ic_enable_set(1);
+	}
+	
+	vibrator_value = timeout;
+	return 0;	
+}
+
+// chui101: callback function to turn on vibe
+static void tspdrv_queue_callback(struct work_struct *foo)
+{
+	tspdrv_set(vibrator_work);
+	return;
+}
+
+// chui101: callback function when timer expires to turn off vibe
+static enum hrtimer_restart tspdrv_timer_callback(struct hrtimer *timer)
+{
+	vibrator_work = 0;
+	schedule_work(&tspdrv_queue);
+
+	return HRTIMER_NORESTART;
+}
+
+// chui101: get the remaining time on vibration
+static int get_vibration_time(struct timed_output_dev *dev)
+{
+	int remaining;
+
+	if (hrtimer_active(&timer)) {
+		ktime_t r = hrtimer_get_remaining(&timer);
+		remaining = r.tv.sec * 1000 + r.tv.nsec / 1000000;
+	} else
+		remaining = 0;
+
+	if (vibrator_value ==-1)
+		remaining = -1;
+
+	return remaining;
+
+}
+
+static struct timed_output_dev timed_output_tspdrv = {
+	.name     = "vibrator",
+	.get_time = get_vibration_time,
+	.enable   = enable_tspdrv_from_userspace,
+};
+
+// chui101: registers timed output device in sysfs so libhardware_legacy can interface
+static void timed_output_register(void)
+{
+	int ret = 0;
+
+	hrtimer_init(&timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
+	timer.function = tspdrv_timer_callback;
+
+	ret = timed_output_dev_register(&timed_output_tspdrv);
+	if(ret)
+		printk(KERN_ERR "[ImmVibe] timed_output_dev_register is fail \n");	
+}
+
+///////////////////////////////////////
+/* chui101: end timed output device  */
+///////////////////////////////////////
 
 /* File IO */
 static int immersion_vibrator_open(struct inode *inode, struct file *file);
@@ -299,6 +412,8 @@ static int __init immersion_vibrator_init(void)
     {
         DbgOut((KERN_ERR "tspdrv: platform_driver_register failed.\n"));
     }
+	
+	timed_output_register(); //chui101: add timed output device
     return 0;
 }
 

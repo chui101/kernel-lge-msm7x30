@@ -64,6 +64,30 @@ static struct platform_device msm_vpe_device = {
 #endif
 
 /*====================================================================================
+            MSM GEMINI Device
+ =====================================================================================*/
+#ifdef CONFIG_MSM_GEMINI
+static struct resource msm_gemini_resources[] = {
+	{
+		.start  = 0xA3A00000,
+		.end    = 0xA3A00000 + 0x0150 - 1,
+		.flags  = IORESOURCE_MEM,
+	},
+	{
+		.start  = INT_JPEG,
+		.end    = INT_JPEG,
+		.flags  = IORESOURCE_IRQ,
+	},
+};
+
+static struct platform_device msm_gemini_device = {
+	.name           = "msm_gemini",
+	.resource       = msm_gemini_resources,
+	.num_resources  = ARRAY_SIZE(msm_gemini_resources),
+};
+#endif
+
+/*====================================================================================
             Devices
  =====================================================================================*/
 
@@ -184,32 +208,33 @@ void config_camera_off_gpios(void)
                 ARRAY_SIZE(camera_off_gpio_table));
 }
 
-static struct platform_device msm_camera_sensor_mt9p017;
-
 int main_camera_power_off (void)
 {
     printk(KERN_ERR "%s: main_camera_power_off \n",__func__);
-gpio_tlmm_config( GPIO_CFG(CAM_MAIN_GPIO_RESET_N, 0, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA),GPIO_CFG_ENABLE);
+    gpio_tlmm_config( GPIO_CFG(CAM_MAIN_GPIO_RESET_N, 0, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA),GPIO_CFG_ENABLE);
     gpio_set_value(CAM_MAIN_GPIO_RESET_N, 0);
     mdelay(1);
-        msm_camio_clk_disable(CAMIO_CAM_MCLK_CLK);
-
-  //  msm_camio_sensor_clk_off(&msm_camera_sensor_mt9p017);
+    
+	msm_camio_clk_disable(CAMIO_CAM_MCLK_CLK);
     mdelay(1);
     
     {
+        struct vreg *vreg_cam_iovdd_1_8v;
         struct vreg *vreg_cam_dvdd_1_8v;
         struct vreg *vreg_cam_avdd_2_8v;
         struct vreg *vreg_cam_af_2_8v;
 
-        vreg_cam_dvdd_1_8v = vreg_get(NULL, "lvsw0");
-        vreg_disable(vreg_cam_dvdd_1_8v);
+        vreg_cam_af_2_8v = vreg_get(NULL, "gp2");
+        vreg_disable(vreg_cam_af_2_8v);
 
         vreg_cam_avdd_2_8v = vreg_get(NULL, "gp9");
         vreg_disable(vreg_cam_avdd_2_8v);
+
+        vreg_cam_dvdd_1_8v = vreg_get(NULL, "gp13");
+        vreg_disable(vreg_cam_dvdd_1_8v);
         
-        vreg_cam_af_2_8v = vreg_get(NULL, "gp2");
-        vreg_disable(vreg_cam_af_2_8v);
+        vreg_cam_iovdd_1_8v = vreg_get(NULL, "lvsw0");
+        vreg_disable(vreg_cam_iovdd_1_8v);
     }
 
     return 0;
@@ -218,16 +243,23 @@ gpio_tlmm_config( GPIO_CFG(CAM_MAIN_GPIO_RESET_N, 0, GPIO_CFG_OUTPUT, GPIO_CFG_N
 int main_camera_power_on (void)
 {
     printk(KERN_ERR "%s: main_camera_power_on \n",__func__);
-
-gpio_tlmm_config( GPIO_CFG(CAM_MAIN_GPIO_RESET_N, 0, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA),GPIO_CFG_ENABLE);
+    gpio_tlmm_config( GPIO_CFG(CAM_MAIN_GPIO_RESET_N, 0, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA),GPIO_CFG_ENABLE);
     gpio_set_value(CAM_MAIN_GPIO_RESET_N, 0);
 	mdelay(10);
     {
         int rc;
         
+        struct vreg *vreg_cam_iovdd_1_8v;
         struct vreg *vreg_cam_dvdd_1_8v;
         struct vreg *vreg_cam_avdd_2_8v;
         struct vreg *vreg_cam_af_2_8v;
+
+        vreg_cam_iovdd_1_8v = vreg_get(NULL, "lvsw0");
+        vreg_enable(vreg_cam_iovdd_1_8v); 
+
+        vreg_cam_dvdd_1_8v = vreg_get(NULL, "gp13");
+        rc = vreg_set_level(vreg_cam_dvdd_1_8v, 1800);
+        vreg_enable(vreg_cam_dvdd_1_8v);
 
         vreg_cam_af_2_8v = vreg_get(NULL, "gp2");
         rc = vreg_set_level(vreg_cam_af_2_8v, 2800);
@@ -236,29 +268,22 @@ gpio_tlmm_config( GPIO_CFG(CAM_MAIN_GPIO_RESET_N, 0, GPIO_CFG_OUTPUT, GPIO_CFG_N
         vreg_cam_avdd_2_8v = vreg_get(NULL, "gp9");
         rc = vreg_set_level(vreg_cam_avdd_2_8v, 2800);
         vreg_enable(vreg_cam_avdd_2_8v);
-
-        vreg_cam_dvdd_1_8v = vreg_get(NULL, "lvsw0");
-        vreg_enable(vreg_cam_dvdd_1_8v);  
     }
 
+
     /* Input MCLK = 24MHz */
-//    mdelay(300);
     mdelay(10);
-      //  msm_camio_clk_enable(CAMIO_CAM_MCLK_CLK);
 
-   // msm_camio_clk_rate_set(24000000);    
+    msm_camio_clk_enable(CAMIO_CAM_MCLK_CLK);
     mdelay(10);
-   // msm_camio_sensor_clk_on(&msm_camera_sensor_mt9p017);
-      msm_camio_clk_enable(CAMIO_CAM_MCLK_CLK);
-    mdelay(10);
-gpio_tlmm_config( GPIO_CFG(CAM_MAIN_GPIO_RESET_N, 0, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA),GPIO_CFG_ENABLE);
-
+    gpio_tlmm_config( GPIO_CFG(CAM_MAIN_GPIO_RESET_N, 0, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA),GPIO_CFG_ENABLE);
     gpio_set_value(CAM_MAIN_GPIO_RESET_N, 1);
     mdelay(10);
 
     return 0;
 }
 
+#ifdef CONFIG_TCM9000MD
 static struct platform_device msm_camera_sensor_tcm9000md;
 
 int vga_camera_power_off (void)
@@ -354,6 +379,7 @@ int vga_camera_power_on (void)
 
     return 0;
 }
+#endif //CONFIG_TCM9000MD
 
 struct resource msm_camera_resources[] = {
         {
