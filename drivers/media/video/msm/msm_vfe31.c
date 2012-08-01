@@ -430,8 +430,6 @@ static void vfe31_proc_ops(enum VFE31_MESSAGE_ID id, void *msg, size_t len)
 			rp->evt_msg.data)->_u.msgStats.buff.rs;
 		rp->stats_msg.cs_buff = ((struct vfe_message *)
 			rp->evt_msg.data)->_u.msgStats.buff.cs;
-		rp->stats_msg.awb_ymin = ((struct vfe_message *)
-			rp->evt_msg.data)->_u.msgStats.buff.awb_ymin;
 		break;
 
 	case MSG_ID_SYNC_TIMER0_DONE:
@@ -3124,8 +3122,7 @@ static void vfe31_process_output_path_irq_2(uint32_t ping_pong)
 			"PP_status = 0x%x\n", ping_pong);
 		return;
 	}
-	if ((vfe31_ctrl->recording_state == VFE_REC_STATE_STOP_REQUESTED)
-		|| (vfe31_ctrl->recording_state == VFE_REC_STATE_STOPPED)) {
+	if (vfe31_ctrl->recording_state == VFE_REC_STATE_STOP_REQUESTED) {
 		vfe31_ctrl->outpath.out2.frame_drop_cnt++;
 		pr_warning("path_irq_2 - recording stopped\n");
 		return;
@@ -3224,8 +3221,6 @@ static uint32_t  vfe31_process_stats_irq_common(uint32_t statsNum,
 static void vfe_send_stats_msg(void)
 {
 	struct  vfe_message msg;
-	uint32_t temp;
-
 	/* fill message with right content. */
 	msg._u.msgStats.frameCounter = vfe31_ctrl->vfeFrameId;
 	msg._u.msgStats.status_bits = vfe31_ctrl->status_bits;
@@ -3238,9 +3233,6 @@ static void vfe_send_stats_msg(void)
 	msg._u.msgStats.buff.ihist = vfe31_ctrl->ihistStatsControl.bufToRender;
 	msg._u.msgStats.buff.rs = vfe31_ctrl->rsStatsControl.bufToRender;
 	msg._u.msgStats.buff.cs = vfe31_ctrl->csStatsControl.bufToRender;
-
-	temp = msm_io_r(vfe31_ctrl->vfebase + VFE_STATS_AWB_SGW_CFG);
-	msg._u.msgStats.buff.awb_ymin = (0xFF00 & temp) >> 8;
 
 	vfe31_proc_ops(msg._d,
 		&msg, sizeof(struct vfe_message));

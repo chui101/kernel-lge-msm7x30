@@ -30,7 +30,7 @@
             RESET/PWDN
  =====================================================================================*/
 
-#define CAM_MAIN_I2C_SLAVE_ADDR         (0x36)     
+#define CAM_MAIN_I2C_SLAVE_ADDR         (0x36 >> 1)     
 #define CAM_VGA_I2C_SLAVE_ADDR          (0x7C >> 1)
 
 #define CAM_MAIN_GPIO_RESET_N           (0)
@@ -220,7 +220,6 @@ int main_camera_power_off (void)
     
     {
         struct vreg *vreg_cam_iovdd_1_8v;
-        struct vreg *vreg_cam_dvdd_1_8v;
         struct vreg *vreg_cam_avdd_2_8v;
         struct vreg *vreg_cam_af_2_8v;
 
@@ -230,9 +229,6 @@ int main_camera_power_off (void)
         vreg_cam_avdd_2_8v = vreg_get(NULL, "gp9");
         vreg_disable(vreg_cam_avdd_2_8v);
 
-        vreg_cam_dvdd_1_8v = vreg_get(NULL, "gp13");
-        vreg_disable(vreg_cam_dvdd_1_8v);
-        
         vreg_cam_iovdd_1_8v = vreg_get(NULL, "lvsw0");
         vreg_disable(vreg_cam_iovdd_1_8v);
     }
@@ -250,16 +246,11 @@ int main_camera_power_on (void)
         int rc;
         
         struct vreg *vreg_cam_iovdd_1_8v;
-        struct vreg *vreg_cam_dvdd_1_8v;
         struct vreg *vreg_cam_avdd_2_8v;
         struct vreg *vreg_cam_af_2_8v;
 
         vreg_cam_iovdd_1_8v = vreg_get(NULL, "lvsw0");
         vreg_enable(vreg_cam_iovdd_1_8v); 
-
-        vreg_cam_dvdd_1_8v = vreg_get(NULL, "gp13");
-        rc = vreg_set_level(vreg_cam_dvdd_1_8v, 1800);
-        vreg_enable(vreg_cam_dvdd_1_8v);
 
         vreg_cam_af_2_8v = vreg_get(NULL, "gp2");
         rc = vreg_set_level(vreg_cam_af_2_8v, 2800);
