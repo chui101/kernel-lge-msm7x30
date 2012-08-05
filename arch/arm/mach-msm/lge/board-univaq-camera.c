@@ -30,7 +30,7 @@
             RESET/PWDN
  =====================================================================================*/
 
-#define CAM_MAIN_I2C_SLAVE_ADDR         (0x36)     
+#define CAM_MAIN_I2C_SLAVE_ADDR         (0x36 >> 1)
 #define CAM_VGA_I2C_SLAVE_ADDR          (0x7C >> 1)
 
 #define CAM_MAIN_GPIO_RESET_N           (0)
@@ -109,9 +109,9 @@ static struct platform_device *victor_camera_msm_devices[] __initdata = {
 /*====================================================================================
             Flash
  =====================================================================================*/
-#if defined(CONFIG_MT9P017) || defined(CONFIG_TCM9000MD)
+#ifdef CONFIG_LM2759_FLASH
 
-#define CAM_FLASH_I2C_SLAVE_ADDR		0x53
+#define CAM_FLASH_I2C_SLAVE_ADDR		(0x53 >> 1)
 
 static struct msm_camera_sensor_flash_src msm_flash_src = {
 	.flash_sr_type = MSM_CAMERA_FLASH_SRC_PMIC,

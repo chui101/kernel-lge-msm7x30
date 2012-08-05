@@ -43,6 +43,11 @@ config LGE_MODEL_E739
 	default n
 	depends on MACH_LGE
 
+config LGE_MODEL_C800
+	bool "c800"
+	default n
+	depends on MACH_LGE
+
 config LGE_MODEL_E739_REV_A
 	bool "e739 HW rev.A"
 	default n
