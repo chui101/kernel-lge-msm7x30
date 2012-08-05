@@ -38,21 +38,21 @@ struct mt9p017_i2c_reg_conf const pll_tbl[]=
 struct mt9p017_i2c_reg_conf const init_tbl[] =
 {
 	// Sensor Rev4 Setting 110429 - VCM Current
-	{0x316A, 0x8400},	 // Manufacturer-Specific             
-  {0x316C, 0x8400},  // Manufacturer-Specific  
-  {0x316E, 0x8400},  // Manufacturer-Specific  
-  {0x3EFA, 0x1B1F},  // Manufacturer-Specific   
-	{0x3ED2, 0xD965},	 // Manufacturer-Specific  
-	{0x3ED8, 0x7F1B},	 // Manufacturer-Specific  
-	{0x3EDA, 0xAF11},	 // Manufacturer-Specific  
-	//{0x3EDE, 0xB000},	 // Manufacturer-Specific  
-	{0x3EE2, 0x0060},	 // Manufacturer-Specific  
-	{0x3EF2, 0xD965},	 // Manufacturer-Specific  
-	{0x3EF8, 0x797F},	 // Manufacturer-Specific  
-	{0x3EFC, 0xA8EF},	  //improve colomn noise_20110719_gungil.lee@lge.com
-	{0x3EFE, 0x1F0F},	 // Manufacturer-Specific  
-	{0x31E0, 0x1F01},	 // Manufacturer-Specific  
-	{0x3E00, 0x0429},	 // Manufacturer-Specific  
+	{0x316A, 0x8400},	// Manufacturer-Specific	
+	{0x316C, 0x8400},	// Manufacturer-Specific  
+	{0x316E, 0x8400},	// Manufacturer-Specific  
+	{0x3EFA, 0x1B1F},	// Manufacturer-Specific   
+	{0x3ED2, 0xD965},	// Manufacturer-Specific  
+	{0x3ED8, 0x7F1B},	// Manufacturer-Specific  
+	{0x3EDA, 0xAF11},	// Manufacturer-Specific  
+//	{0x3EDE, 0xB000},	// Manufacturer-Specific  
+	{0x3EE2, 0x0060},	// Manufacturer-Specific  
+	{0x3EF2, 0xD965},	// Manufacturer-Specific  
+	{0x3EF8, 0x797F},	// Manufacturer-Specific  
+	{0x3EFC, 0xA8EF},	//improve colomn noise_20110719_gungil.lee@lge.com
+	{0x3EFE, 0x1F0F},	// Manufacturer-Specific  
+	{0x31E0, 0x1F01},	// Manufacturer-Specific  
+	{0x3E00, 0x0429},	// Manufacturer-Specific  
 	{0x3E02, 0xFFFF},  // Manufacturer-Specific  
 	{0x3E04, 0xFFFF},  // Manufacturer-Specific  
 	{0x3E06, 0xFFFF},  // Manufacturer-Specific  
@@ -178,7 +178,7 @@ struct mt9p017_i2c_reg_conf const mode_preview_tbl[]=
 	{0x3002, 0x0000},	 //y_start_addr
 	{0x3006, 0x07A5},	 //y_addr_end
 #ifdef CONFIG_LGE_MODEL_C800
-	{0x3040, 0x04C3},	 //read_mode c800
+	{0x3040, 0xC4C3},	 //read_mode
 #else
 	{0x3040, 0xC4C3},	 //read_mode
 #endif
@@ -198,7 +198,7 @@ struct mt9p017_i2c_reg_conf const mode_preview_tbl_180_rot[]=
 	{0x3002, 0x0000},	 //y_start_addr
 	{0x3006, 0x07A5},	 //y_addr_end
 #ifdef CONFIG_LGE_MODEL_C800
-	{0x3040, 0x04C3},	 //read_mode c800
+	{0x3040, 0xC4C3},	 //read_mode
 #else
 	{0x3040, 0xC4C3},	 //read_mode
 #endif
@@ -220,7 +220,7 @@ struct mt9p017_i2c_reg_conf const mode_snapshot_tbl[]=
 	{0x3002, 0x0000},	 //y_start_addr
 	{0x3006, 0x07A7},	 //y_addr_end
 #ifdef CONFIG_LGE_MODEL_C800
-	{0x3040, 0x0041},	 //read_mode - vertical flip, horizontal mirror
+	{0x3040, 0xC041},	 //read_mode
 #else
 	{0x3040, 0xC041},	 //read_mode
 #endif
@@ -241,7 +241,7 @@ struct mt9p017_i2c_reg_conf const mode_snapshot_tbl_180_rot[]=
 	{0x3002, 0x0000},	 //y_start_addr
 	{0x3006, 0x07A7},	 //y_addr_end
 #ifdef CONFIG_LGE_MODEL_C800
-	{0x3040, 0x0041},	 //read_mode - vertical flip, horizontal mirror
+	{0x3040, 0x0041},	 //read_mode
 #else
 	{0x3040, 0xC041},	 //read_mode
 #endif
@@ -254,7 +254,117 @@ struct mt9p017_i2c_reg_conf const mode_snapshot_tbl_180_rot[]=
 	{0x3010, 0x00A0},	 //fine_correction
 };
 
-
+#ifdef CONFIG_LGE_MODEL_C800
+struct mt9p017_i2c_reg_conf const lensrolloff_tbl[] = {
+	{0x3600, 0x7F2F},	//  P_GR_P0Q0
+	{0x3602, 0x03AE},	//  P_GR_P0Q1
+	{0x3604, 0x3C50},	//  P_GR_P0Q2
+	{0x3606, 0xD52D},	//  P_GR_P0Q3
+	{0x3608, 0x8391},	//  P_GR_P0Q4
+	{0x360A, 0x0050},	//  P_RD_P0Q0
+	{0x360C, 0xEF0C},	//  P_RD_P0Q1
+	{0x360E, 0x2C10},	//  P_RD_P0Q2
+	{0x3610, 0x362D},	//  P_RD_P0Q3
+	{0x3612, 0xEB90},	//  P_RD_P0Q4
+	{0x3614, 0x02D0},	//  P_BL_P0Q0 
+	{0x3616, 0x352E},	//  P_BL_P0Q1 
+	{0x3618, 0x538F},	//  P_BL_P0Q2 
+	{0x361A, 0xE3AE},	//  P_BL_P0Q3 
+	{0x361C, 0xA610},	//  P_BL_P0Q4 
+	{0x361E, 0x0070},	//  P_GB_P0Q0
+	{0x3620, 0x8B6D},	//  P_GB_P0Q1
+	{0x3622, 0x5C30},	//  P_GB_P0Q2
+	{0x3624, 0x1169},	//  P_GB_P0Q3
+	{0x3626, 0x9DF1},	//  P_GB_P0Q4
+	{0x3640, 0xB04C},	//  P_GR_P1Q0
+	{0x3642, 0xDA0D},	//  P_GR_P1Q1
+	{0x3644, 0xABCF},	//  P_GR_P1Q2
+	{0x3646, 0x4CAD},	//  P_GR_P1Q3
+	{0x3648, 0x50F0},	//  P_GR_P1Q4
+	{0x364A, 0x860C},	//  P_RD_P1Q0
+	{0x364C, 0x31CD},	//  P_RD_P1Q1
+	{0x364E, 0x16EE},	//  P_RD_P1Q2
+	{0x3650, 0x9AAE},	//  P_RD_P1Q3
+	{0x3652, 0xAB4E},	//  P_RD_P1Q4
+	{0x3654, 0x0B8D},	//  P_BL_P1Q0 
+	{0x3656, 0x0BCE},	//  P_BL_P1Q1 
+	{0x3658, 0x35AE},	//  P_BL_P1Q2 
+	{0x365A, 0xD72E},	//  P_BL_P1Q3 
+	{0x365C, 0xC7AF},	//  P_BL_P1Q4 
+	{0x365E, 0x738B},	//  P_GB_P1Q0
+	{0x3660, 0x8E6E},	//  P_GB_P1Q1
+	{0x3662, 0x7FEF},	//  P_GB_P1Q2
+	{0x3664, 0x36CE},	//  P_GB_P1Q3
+	{0x3666, 0xF530},	//  P_GB_P1Q4
+	{0x3680, 0x2A50},	//  P_GR_P2Q0
+	{0x3682, 0x66ED},	//  P_GR_P2Q1
+	{0x3684, 0xE98D},	//  P_GR_P2Q2
+	{0x3686, 0xC4CE},	//  P_GR_P2Q3
+	{0x3688, 0x8AB3},	//  P_GR_P2Q4
+	{0x368A, 0x3550},	//  P_RD_P2Q0
+	{0x368C, 0xA80E},	//  P_RD_P2Q1
+	{0x368E, 0xC5CE},	//  P_RD_P2Q2
+	{0x3690, 0x16CC},	//  P_RD_P2Q3
+	{0x3692, 0xFD32},	//  P_RD_P2Q4
+	{0x3694, 0x0F30},	//  P_BL_P2Q0 
+	{0x3696, 0x00ED},	//  P_BL_P2Q1 
+	{0x3698, 0xD98E},	//  P_BL_P2Q2 
+	{0x369A, 0x79CE},	//  P_BL_P2Q3 
+	{0x369C, 0xB732},	//  P_BL_P2Q4 
+	{0x369E, 0x31B0},	//  P_GB_P2Q0
+	{0x36A0, 0xF80E},	//  P_GB_P2Q1
+	{0x36A2, 0xA830},	//  P_GB_P2Q2
+	{0x36A4, 0x6FAF},	//  P_GB_P2Q3
+	{0x36A6, 0xBFB2},	//  P_GB_P2Q4
+	{0x36C0, 0x550E},	//  P_GR_P3Q0
+	{0x36C2, 0x24AE},	//  P_GR_P3Q1
+	{0x36C4, 0x30CF},	//  P_GR_P3Q2
+	{0x36C6, 0xE06D},	//  P_GR_P3Q3
+	{0x36C8, 0xD6F0},	//  P_GR_P3Q4
+	{0x36CA, 0x1D8F},	//  P_RD_P3Q0
+	{0x36CC, 0x820D},	//  P_RD_P3Q1
+	{0x36CE, 0x88B1},	//  P_RD_P3Q2
+	{0x36D0, 0x574E},	//  P_RD_P3Q3
+	{0x36D2, 0x58D1},	//  P_RD_P3Q4
+	{0x36D4, 0xBD6D},	//  P_BL_P3Q0 
+	{0x36D6, 0xBD4E},	//  P_BL_P3Q1 
+	{0x36D8, 0xD2AE},	//  P_BL_P3Q2 
+	{0x36DA, 0x4AEF},	//  P_BL_P3Q3 
+	{0x36DC, 0x0351},	//  P_BL_P3Q4 
+	{0x36DE, 0x4ACD},	//  P_GB_P3Q0
+	{0x36E0, 0x7A6D},	//  P_GB_P3Q1
+	{0x36E2, 0xEF50},	//  P_GB_P3Q2
+	{0x36E4, 0xBD6B},	//  P_GB_P3Q3
+	{0x36E6, 0x5931},	//  P_GB_P3Q4
+	{0x3700, 0xBD70},	//  P_GR_P4Q0
+	{0x3702, 0xFD8F},	//  P_GR_P4Q1
+	{0x3704, 0x9834},	//  P_GR_P4Q2
+	{0x3706, 0x0ED0},	//  P_GR_P4Q3
+	{0x3708, 0x6A75},	//  P_GR_P4Q4
+	{0x370A, 0x9FB0},	//  P_RD_P4Q0
+	{0x370C, 0x7CC5},	//  P_RD_P4Q1
+	{0x370E, 0x8914},	//  P_RD_P4Q2
+	{0x3710, 0x6530},	//  P_RD_P4Q3
+	{0x3712, 0x5DF5},	//  P_RD_P4Q4
+	{0x3714, 0x9150},	//  P_BL_P4Q0 
+	{0x3716, 0xE86F},	//  P_BL_P4Q1 
+	{0x3718, 0xF473},	//  P_BL_P4Q2 
+	{0x371A, 0x342D},	//  P_BL_P4Q3 
+	{0x371C, 0x50D5},	//  P_BL_P4Q4 
+	{0x371E, 0xBBB0},	//  P_GB_P4Q0
+	{0x3720, 0x1D6F},	//  P_GB_P4Q1
+	{0x3722, 0x8114},	//  P_GB_P4Q2
+	{0x3724, 0x97CD},	//  P_GB_P4Q3
+	{0x3726, 0x47F5},	//  P_GB_P4Q4
+	{0x3782, 0x0508},	//  POLY_ORIGIN_C
+	{0x3784, 0x03B4},	//  POLY_ORIGIN_R
+	{0x37C0, 0x388A},	//  P_GR_Q5    
+	{0x37C2, 0x258A},	//  P_RD_Q5
+	{0x37C4, 0x6CEA},	//  P_BL_Q5
+	{0x37C6, 0x1A2B},	//  P_GB_Q5    
+	{0x3780, 0x8000}	//  Poly_sc_enable
+};
+#else
 struct mt9p017_i2c_reg_conf const lensrolloff_tbl[] = {
 	//[Lens Shading Settings 60%]
 	{0x3600, 0x7FEF}, 	//  P_GR_P0Q0
@@ -366,7 +476,7 @@ struct mt9p017_i2c_reg_conf const lensrolloff_tbl[] = {
 //	{0x3780, 0x0000} 	//  LSC_Enable	
 	{0x3780, 0x8000} 	//  LSC_Enable	
 };
-
+#endif
 
 struct mt9p017_reg mt9p017_regs = {
 	.pll_tbl = &pll_tbl[0],
