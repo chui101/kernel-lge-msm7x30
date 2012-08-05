@@ -301,7 +301,7 @@ static int lm3530_cal_brightness(struct lm3530_driver_data *drvdata, int level)
 #endif	
 	
 #endif
-	printk("%s: Brightness level: %d , Cal Value: 0x%x \n",__func__, level, cal_level);
+	//printk("%s: Brightness level: %d , Cal Value: 0x%x \n",__func__, level, cal_level);
 	return cal_level;
 }
 

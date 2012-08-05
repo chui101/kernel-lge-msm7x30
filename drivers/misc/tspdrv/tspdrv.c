@@ -119,7 +119,7 @@ static DECLARE_WORK(tspdrv_queue, tspdrv_queue_callback); // create workqueue ts
 //     value = time to turn on vibration in ms
 static void enable_tspdrv_from_userspace(struct timed_output_dev *dev,int value)
 {
-	printk(KERN_INFO "[ImmVibe] %s : time = %d ms \n",__func__,value);
+	//printk(KERN_INFO "[ImmVibe] %s : time = %d ms \n",__func__,value);
 	hrtimer_cancel(&timer);
 	
 	// don't vibrate for longer than 5 seconds
