@@ -180,7 +180,7 @@ int msm_camera_flash_current_driver(
 		current_driver->driver_channel;
 	int num_leds = driver_channel->num_leds;
 
-	CDBG("%s: led_state = %d\n", __func__, led_state);
+	printk("%s: led_state = %d\n", __func__, led_state);
 
 	/* Evenly distribute current across all channels */
 	switch (led_state) {
@@ -360,6 +360,12 @@ int msm_camera_flash_pmic(
 }
 
 #ifdef CONFIG_LM2759_FLASH
+/* chui101: For reference, taken from lm2759_flash.c
+#define	CAMERA_LED_OFF	 	 			0
+#define CAMERA_LED_LOW   	 			1 	
+#define CAMERA_LED_HIGH	 	 			2 
+#define CAMERA_LED_AGC_STATE 			3
+#define CAMERA_LED_TORCH 				4 */
 
 int lm2759_flash_set_led_state(unsigned led_state);
 
@@ -368,27 +374,29 @@ int msm_camera_flash_lm2759(unsigned led_state)
         int rc = 0;
 
         switch (led_state) {
-        case MSM_CAMERA_LED_OFF:
-                rc = lm2759_flash_set_led_state(0);
-                break;
+        case MSM_CAMERA_LED_OFF: //0
+			rc = lm2759_flash_set_led_state(0);
+			break;
 
-        case MSM_CAMERA_LED_LOW:
-                rc = lm2759_flash_set_led_state(4);
-                break;
+        case MSM_CAMERA_LED_LOW: //1
+			rc = lm2759_flash_set_led_state(4); //chui101: use torch because low is really really really dim
+			break;
 
-        case MSM_CAMERA_LED_HIGH:
-                rc = lm2759_flash_set_led_state(2);
-                break;
+        case MSM_CAMERA_LED_HIGH: //2
+			rc = lm2759_flash_set_led_state(2); 
+            break;
+			
+		case MSM_CAMERA_LED_INIT: //3
+		case MSM_CAMERA_LED_RELEASE: //4
+            //chui101: nothing to do here
+            break;
 
-        case MSM_CAMERA_LED_TORCH:
-                rc = lm2759_flash_set_led_state(4);
-                break;
         default:
-                rc = -EFAULT;
-                break;
+            rc = -EFAULT;
+            break;
         }
 
-        CDBG("flash_set_led_state: return %d\n", rc);
+        printk("msm_camera_flash_lm2759: return %d\n", rc);
 
         return rc;
 }
@@ -400,9 +408,7 @@ int32_t msm_camera_flash_set_led_state(
 {
 	int32_t rc;
 
-                return -ENODEV;
-
-	CDBG("flash_set_led_state: %d flash_sr_type=%d\n", led_state,
+	printk("msm_camera_flash_set_led_state: %d flash_sr_type=%d\n", led_state,
 	    fdata->flash_src->flash_sr_type);
 
 	if (fdata->flash_type != MSM_CAMERA_FLASH_LED)
@@ -595,6 +601,7 @@ int msm_flash_ctrl(struct msm_camera_sensor_info *sdata,
 	int rc = 0;
 	switch (flash_info->flashtype) {
 	case LED_FLASH:
+		pr_err("%s: led_state=%d\n", __func__, flash_info->ctrl_data.led_state);
 		rc = msm_camera_flash_set_led_state(sdata->flash_data,
 			flash_info->ctrl_data.led_state);
 			break;

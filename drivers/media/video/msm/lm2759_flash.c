@@ -230,30 +230,24 @@ int lm2759_flash_set_led_state(int led_state)
 {	
 	int current_agc = 0;
 	int rc = 0;
+	printk("[LM2759]%s: led state %d\n", __func__, led_state);
 
 	switch (led_state) {
 	case CAMERA_LED_OFF:
-		printk("[LM2759]CAMERA_LED_OFF\n");
 		lm2759_led_shutdown();
 		break;
 	case CAMERA_LED_LOW:
-		printk("[LM2759]CAMERA_LED_LOW\n");
 		lm2759_enable_flash_mode(CAMERA_LED_LOW);
 		break;
 	case CAMERA_LED_HIGH:	
-		printk("[LM2759]CAMERA_LED_HIGH\n");
 		lm2759_enable_flash_mode(CAMERA_LED_HIGH);
 		break;
-    	case CAMERA_LED_AGC_STATE:
-    	        printk("[LM2759]CAMERA_LED_AGC_STATE\n");
-//		rc = isx006_get_current_agc(&current_agc);
-		
+    case CAMERA_LED_AGC_STATE:
 		if(current_agc >= AGC_THRESHOLD){
 			lm2759_enable_flash_mode(CAMERA_LED_HIGH);
 		}
 		break;
 	case CAMERA_LED_TORCH:	
-		printk("[LM2759]CAMERA_LED_TORCH\n");
 		lm2759_enable_torch_mode(CAMERA_LED_HIGH);
 		break;			
 	default:

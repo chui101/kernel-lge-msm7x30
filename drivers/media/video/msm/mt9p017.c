@@ -670,20 +670,20 @@ static void mt9p017_af_init(void)
 	for(i=1; i <= MT9P017_TOTAL_STEPS_NEAR_TO_FAR; i++){
 		if ( i <= mt9p017_nl_region_boundary1){
 			mt9p017_step_position_table[i] = mt9p017_step_position_table[i-1] + mt9p017_nl_region_code_per_step1;
-			printk("** mt9p017_step_position_table[%d] = %d **\n", i,mt9p017_step_position_table[i] );
+			CDBG("** mt9p017_step_position_table[%d] = %d **\n", i,mt9p017_step_position_table[i] );
 			}
 		else if ( i <= mt9p017_nl_region_boundary2){
 			mt9p017_step_position_table[i] = mt9p017_step_position_table[i-1] + mt9p017_nl_region_code_per_step2;
-			printk("** mt9p017_step_position_table[%d] = %d **\n", i,mt9p017_step_position_table[i] );
+			CDBG("** mt9p017_step_position_table[%d] = %d **\n", i,mt9p017_step_position_table[i] );
 			}
 		else{
 			mt9p017_step_position_table[i] = mt9p017_step_position_table[i-1] + mt9p017_l_region_code_per_step;
-			printk("** mt9p017_step_position_table[%d] = %d **\n", i,mt9p017_step_position_table[i] );
+			CDBG("** mt9p017_step_position_table[%d] = %d **\n", i,mt9p017_step_position_table[i] );
 			}
 		if (mt9p017_step_position_table[i] >255) //sungmin.woo 255를 넘어가면 의미 없음 
 		{	
 			mt9p017_step_position_table[i] = 255;
-			printk("*** mt9p017_step_position_table[%d] = %d ***\n", i,mt9p017_step_position_table[i] );
+			CDBG("*** mt9p017_step_position_table[%d] = %d ***\n", i,mt9p017_step_position_table[i] );
 		}
 	}
 }
@@ -1191,9 +1191,8 @@ int mt9p017_sensor_config(void __user *argp)
 		sizeof(struct sensor_cfg_data)))
 		return -EFAULT;
 	mutex_lock(&mt9p017_mut);
-	CDBG("mt9p017_sensor_config: cfgtype = %d\n",
-	cdata.cfgtype);
-		switch (cdata.cfgtype) {
+	CDBG("mt9p017_sensor_config: cfgtype = %d\n",	cdata.cfgtype);
+	switch (cdata.cfgtype) {
 		case CFG_GET_PICT_FPS:
 			mt9p017_get_pict_fps(
 				cdata.cfg.gfps.prevfps,
@@ -1308,6 +1307,7 @@ int mt9p017_sensor_config(void __user *argp)
 			break;
 		case CFG_SET_EFFECT:
 		default:
+			pr_err("%s: unknown command type %d\n", __func__, cdata.cfgtype);
 			rc = -EFAULT;
 			break;
 		}

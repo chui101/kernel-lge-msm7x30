@@ -111,7 +111,7 @@ static struct platform_device *victor_camera_msm_devices[] __initdata = {
  =====================================================================================*/
 #ifdef CONFIG_LM2759_FLASH
 
-#define CAM_FLASH_I2C_SLAVE_ADDR		(0x53 >> 1)
+#define CAM_FLASH_I2C_SLAVE_ADDR		0x53
 
 static struct msm_camera_sensor_flash_src msm_flash_src = {
 	.flash_sr_type = MSM_CAMERA_FLASH_SRC_PMIC,

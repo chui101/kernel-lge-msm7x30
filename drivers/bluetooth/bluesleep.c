@@ -94,6 +94,10 @@ DECLARE_DELAYED_WORK(sleep_workqueue, bluesleep_sleep_work);
 #define BT_PROTO	0x01
 #define BT_TXDATA	0x02
 #define BT_ASLEEP	0x04
+#if 0 //CONFIG_MACH_MSM8X55_UNIVA_Q
+#define CONFIG_LGE_BRCM_H4_LPM_SUPPORT_PATCH
+#endif
+
 
 //Un-comment for root permission
 //#define BTLA_ROOT_PERMISSION
@@ -327,7 +331,7 @@ static void bluesleep_tx_timer_expire(unsigned long data)
 		/* clear the incoming data flag only when there is no enqueued data on transport and can be asleep */
 		//if(msm_hs_tx_empty(bsi->uport)){
 			clear_bit(BT_TXDATA, &flags);
-	//	}
+		//}
 #endif
 	}
 

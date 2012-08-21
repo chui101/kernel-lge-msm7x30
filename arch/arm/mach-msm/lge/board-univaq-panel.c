@@ -188,7 +188,7 @@ struct msm_fb_info_st {
 /*write down the mm size of LCD */
 static struct msm_fb_info_st msm_fb_info_data = {
         .width_mm = 50,
-        .height_mm = 83
+        .height_mm = 75
 };
 
 static int msm_fb_event_notify(struct notifier_block *self,

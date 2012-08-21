@@ -23,7 +23,6 @@
 #include <linux/rfkill.h>
 
 /* bluetooth gpio pin */
-
 enum {
 	BT_WAKE         = 133,
 	BT_RFR          = 134,
@@ -37,6 +36,8 @@ enum {
 	BT_HOST_WAKE    = 142,
 	BT_RESET_N		= 122,
 };
+
+static int bt_status = 0;
 
 #ifdef CONFIG_BT
 static unsigned bt_config_power_on[] = {
@@ -81,7 +82,10 @@ static int victor_bluetooth_power(int on)
 {
 	int pin, rc;
 
-	printk(KERN_DEBUG "b-b-b.c %s\n", __func__);
+	if (on == bt_status)
+		return 0;
+
+	printk(KERN_DEBUG "%s_%s\n", __func__,on?"on":"off");
 
 	if (on) {
 		for (pin = 0; pin < ARRAY_SIZE(bt_config_power_on); pin++) {
@@ -115,6 +119,7 @@ static int victor_bluetooth_power(int on)
 			}
 		}
 	}
+	bt_status=on;
 	return 0;
 }
 
@@ -134,6 +139,9 @@ static struct platform_device msm_bt_power_device = {
 static void __init bt_power_init(void)
 {
 	printk(KERN_DEBUG "b-b-b.c bt_power_init\n");
+//LG_BTUI : 2011.03.04.9toy : Initialize BT GPIOs
+    victor_bluetooth_power(0);
+//LG_BTUI
 }
 #else
 #define bt_power_init(x) do {} while (0)
