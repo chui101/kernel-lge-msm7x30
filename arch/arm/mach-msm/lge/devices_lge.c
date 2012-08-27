@@ -39,7 +39,7 @@
 #include <asm/mach/mmc.h>
 #include <mach/msm_hsusb.h>
 #include <mach/rpc_hsusb.h>
-#ifdef CONFIG_USB_ANDROID
+#ifdef CONFIG_USB_G_ANDROID
 #include <linux/usb/android_composite.h>
 #endif
 
@@ -869,7 +869,7 @@ static int msm_hsusb_pmic_notif_init(void (*callback)(int online), int init)
 #endif
 
 /* Android USB Gadget & QCT Function framework */
-#ifdef CONFIG_USB_ANDROID
+#ifdef CONFIG_USB_G_ANDROID
 
 /* NOTE: these are all QCT original settings */
 static char *usb_functions_default[] = {

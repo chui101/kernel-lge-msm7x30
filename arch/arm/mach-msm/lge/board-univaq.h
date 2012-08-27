@@ -25,13 +25,13 @@
 
 
 #ifdef CONFIG_FB_MSM_TRIPLE_BUFFER
-#define MSM_FB_SIZE           		0x780000 
+#define MSM_FB_SIZE           		0x1C2000 // 320 * 480 * 4 bytes per pixel * 3 buffers
 #else 
-#define MSM_FB_SIZE           		0x500000 
+#define MSM_FB_SIZE           		0x12C000 // 320 * 480 * 4 bytes per pixel * 2 buffers
 #endif
 #define MSM_PMEM_SF_SIZE      		0x1D00000 //(this can be zero if TARGET_GRALLOC_USES_ASHMEM enabled) 
 
-#define MSM_PMEM_ADSP_SIZE    		0x1D1A000 
+#define MSM_PMEM_ADSP_SIZE    		0x2000000 
 #define PMEM_KERNEL_EBI1_SIZE 		0x600000 
 #define MSM_PMEM_AUDIO_SIZE   		0x200000 
 #define MSM_FLUID_PMEM_ADSP_SIZE	0x2800000

@@ -41,7 +41,7 @@
 
 /* board-specific usb data definitions */
 /* QCT originals are in device_lge.c, not here */
-#ifdef CONFIG_USB_ANDROID
+#ifdef CONFIG_USB_G_ANDROID
 /* LGE_CHANGE
  * Currently, LG Android host driver has 2 USB bind orders as following;
  * - Android Platform : MDM + DIAG + GPS + UMS + ADB
@@ -341,7 +341,7 @@ static int __init board_serialno_setup(char *serialno)
 	return 1;
 }
 __setup("androidboot.serialno=", board_serialno_setup);
-#endif
+#endif // CONFIG_USB_G_ANDROID
 
 static struct platform_device *devices[] __initdata = {
 	&msm_device_smd,
